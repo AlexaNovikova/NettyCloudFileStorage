@@ -36,7 +36,7 @@ public class Command implements Serializable {
 
     public Command successAuth (String login){
         Command command = new Command();
-        command.type = CommandType.OK;
+        command.type = CommandType.AUTH_OK;
         command.data = new CommandResultOK("Авторизация прошла успешно!", login);
         return command;
     }
@@ -76,7 +76,19 @@ public class Command implements Serializable {
         return command;
     }
 
+    public Command createNewDir(String dirName){
+        Command command = new Command();
+        command.type= CommandType.CREATE;
+        command.data= new CreateDidCommandData(dirName);
+        return command;
+    }
 
+    public Command success(String message){
+        Command command = new Command();
+        command.type = CommandType.OK;
+        command.data = new CommandResultOK("Операция успешно выполнена!", message);
+        return command;
+    }
 
     public CommandType getType() {
         return type;

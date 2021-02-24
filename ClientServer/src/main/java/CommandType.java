@@ -1,6 +1,7 @@
 
 public enum CommandType {
     AUTH,
+    AUTH_OK,
     CD,
     LS,
     OK,
@@ -12,6 +13,7 @@ public enum CommandType {
     DELETE,
     UPDATE,
     MOVE,
+    CREATE,
     ERROR,
     UNKNOWN
 }

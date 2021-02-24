@@ -11,7 +11,7 @@ public class Network {
     private static final int BUFFER_SIZE = 8189;
     private ObjectEncoderOutputStream os;
     private ObjectDecoderInputStream is;
-    private static String clientDid = "Client/src/Files/";
+    private static String clientDir = "Client/src/Files/";
     private final Socket socket;
     public static Network instance;
     private static byte[] buffer;
@@ -57,7 +57,7 @@ public class Network {
             case "/ls": {
                 commandFromClient = new Command().listFilesCommand();
                 os.writeObject(commandFromClient);
-                File dir = new File(clientDid);
+                File dir = new File(clientDir);
                 StringBuilder sb = new StringBuilder(clientNick).append(" files ->  \n");
                 File[] files = dir.listFiles();
                 if (files != null) {
@@ -69,8 +69,7 @@ public class Network {
                             sb.append("[DIR]\n");
                         }
                     }
-                    cloudController.filesOnClient.clear();
-                    cloudController.filesOnClient.appendText(sb.toString());
+                    cloudController.showFilesOnClient(sb.toString());
                 }
                 break;
             }
@@ -101,7 +100,7 @@ public class Network {
                     cloudController.showText("Не верно введена комманда. Укажите имя файла");
                 } else {
                     String fileName = data;
-                    File fileToServer = new File(clientDid + "/" + fileName);
+                    File fileToServer = new File(clientDir + "/" + fileName);
                     if (!fileToServer.exists()) {
                         cloudController.showText("Файл не существует!");
                     } else {
@@ -111,6 +110,29 @@ public class Network {
 
                     }
                 }
+                break;
+            }
+
+            case "/mkdir":{
+                if (data.equals("")) {
+                    cloudController.showText("Не верно введена комманда. Укажите имя новой директории.");
+                }
+                else if(data.split(" ").length>1)
+                    {    cloudController.showText("Не верно введена комманда. Неверно указано имя новой директории.");
+
+                    }
+                 else {
+                        String dirName = data;
+                        Command createNewDir = new Command().createNewDir(dirName);
+                        os.writeObject(createNewDir);
+                        File newDir = new File(clientDir+"/"+dirName);
+                        if (!newDir.exists()){
+                            newDir.mkdir();
+                        }
+                        if(newDir.exists()&&!newDir.isDirectory()){
+                            newDir.mkdir();
+                        }
+                    }
                 break;
             }
 
@@ -135,7 +157,7 @@ public class Network {
         int ptr = 0;
         Long fileSize = sendFileCommandData.getFileSize();
         String fileName = sendFileCommandData.getFileName();
-        File newFile = new File(clientDid + fileName);
+        File newFile = new File(clientDir + fileName);
         try {
             try (FileOutputStream fos = new FileOutputStream(newFile, false)) {
                 if (fileSize > buffer.length) {
@@ -176,7 +198,7 @@ public class Network {
     }
 
     public void sendFile(String fileName, MyCloudController cloudController) {
-        File fileToServer = new File(clientDid + "/" + fileName);
+        File fileToServer = new File(clientDir + "/" + fileName);
         Long fileSize = fileToServer.length();
         try (InputStream fis = new FileInputStream(fileToServer)) {
             int ptr = 0;
