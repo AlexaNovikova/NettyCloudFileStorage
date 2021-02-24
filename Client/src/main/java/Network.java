@@ -45,7 +45,7 @@ public class Network {
         switch (commandType) {
             case "/auth": {
                 if (data.split(" ").length < 2) {
-                    cloudController.showText("Не верно введена комманда - укажите /auth логин пароль");
+                    cloudController.showText("Неверно введена комманда - укажите /auth логин пароль");
                 } else {
                     String login = data.split(" ", 2)[0];
                     String password = data.split(" ", 2)[1];
@@ -76,7 +76,7 @@ public class Network {
             case "/cd": {
                 String directory = data;
                 if (data.equals("")) {
-                    cloudController.showText("Не верно введена комманда. Укажите путь (/cd директория)");
+                    cloudController.showText("Неверно введена комманда. Укажите путь (/cd директория)");
                 } else {
                     commandFromClient = new Command().changeDirectory(directory);
                     os.writeObject(commandFromClient);
@@ -86,7 +86,7 @@ public class Network {
 
             case "/get": {
                 if (data.equals("")) {
-                    cloudController.showText("Не верно введена комманда. Укажите имя файла");
+                    cloudController.showText("Неверно введена комманда. Укажите имя файла");
                 } else {
                     String fileName = data;
                     commandFromClient = new Command().getFileFromServer(fileName);
@@ -97,7 +97,7 @@ public class Network {
 
             case "/send": {
                 if (data.equals("")) {
-                    cloudController.showText("Не верно введена комманда. Укажите имя файла");
+                    cloudController.showText("Неверно введена комманда. Укажите имя файла");
                 } else {
                     String fileName = data;
                     File fileToServer = new File(clientDir + "/" + fileName);
@@ -115,10 +115,10 @@ public class Network {
 
             case "/mkdir":{
                 if (data.equals("")) {
-                    cloudController.showText("Не верно введена комманда. Укажите имя новой директории.");
+                    cloudController.showText("Неверно введена команда. Укажите имя новой директории.");
                 }
                 else if(data.split(" ").length>1)
-                    {    cloudController.showText("Не верно введена комманда. Неверно указано имя новой директории.");
+                    {    cloudController.showText("Неверно введена команда. Неверно указано имя новой директории.");
 
                     }
                  else {
