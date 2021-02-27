@@ -35,11 +35,17 @@ public class MyCloudController implements Initializable {
                     try {
                         Command message = network.readObject();
                         switch (message.getType()){
-                            case OK:{
+                            case AUTH_OK:{
                                 CommandResultOK dataAuthOk = (CommandResultOK) message.getData();
                                 String login  = dataAuthOk.getLogin();
                                 String result =dataAuthOk.getResult();
                                 network.setClientNick(login);
+                                showText(result);
+                                break;
+                            }
+                            case OK:{
+                                CommandResultOK success = (CommandResultOK) message.getData();
+                                String result =success.getResult();
                                 showText(result);
                                 break;
                             }
@@ -90,6 +96,12 @@ public class MyCloudController implements Initializable {
         Platform.runLater(() -> {
             resultOrAnswer.clear();
             resultOrAnswer.appendText(text + "\n");
+        });
+    }
+    public  void showFilesOnClient (String files) {
+        Platform.runLater(() -> {
+            filesOnClient.clear();
+            filesOnClient.appendText(files + "\n");
         });
     }
 

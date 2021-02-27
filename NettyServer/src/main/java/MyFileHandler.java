@@ -3,6 +3,7 @@ import commands.*;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import java.io.*;
+import java.nio.file.Paths;
 
 
 public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
@@ -84,7 +85,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 GetFileCommandData getFileCommandData = (GetFileCommandData) commandFromClient.getData();
                 String fileName = getFileCommandData.getFileName();
                 File fileToSend = new File(serverDir + "/"+fileName);
-                if (fileToSend.exists()) {
+                if (fileToSend.exists()&&fileToSend.isFile()) {
                     Long fileSize = fileToSend.length();
                     Command commandFile = new Command().sendFile(fileName, fileSize);
                     ctx.writeAndFlush(commandFile);
@@ -149,6 +150,24 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                     e.printStackTrace();
                 }
                 break;
+            }
+
+            case CREATE:{
+                System.out.println("Получена команда Create");
+                CreateDidCommandData createDidCommandData = (CreateDidCommandData) commandFromClient.getData();
+                String dirName = createDidCommandData.getDirName();
+                String fullDirName = serverDir+"/"+dirName;
+                File file = new File(fullDirName);
+                if(!file.exists()||(file.exists()&&!file.isDirectory()))
+                {
+                    new File(fullDirName).mkdir();
+                    Command commandToClient = new Command().success(" Создана директория "+ dirName);
+                    ctx.writeAndFlush(commandToClient);
+                }
+                else {
+                    Command commandToClient = new Command().error("Директория с таким именем уже существует на сервере!");
+                    ctx.writeAndFlush(commandToClient);
+                }
             }
 
             case ERROR:{

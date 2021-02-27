@@ -31,8 +31,8 @@
         </menus>
       </MenuBar>
       <TextField fx:id="input" layoutX="50.0" layoutY="77.0" onAction="#CommandToNetwork" prefHeight="26.0" prefWidth="750.0" />
-      <TextArea fx:id="filesOnClient" layoutX="50.0" layoutY="210.0" prefHeight="348.0" prefWidth="354.0" />
-      <TextArea fx:id="filesOnServer" layoutX="451.0" layoutY="213.0" prefHeight="342.0" prefWidth="334.0" />
+      <TextArea fx:id="filesOnClient" layoutX="50.0" layoutY="218.0" prefHeight="342.0" prefWidth="368.0" />
+      <TextArea fx:id="filesOnServer" layoutX="462.0" layoutY="218.0" prefHeight="342.0" prefWidth="334.0" />
       <TextField fx:id="resultOrAnswer" layoutX="50.0" layoutY="130.0" prefHeight="26.0" prefWidth="750.0" />
       <Label layoutX="171.0" layoutY="174.0" prefHeight="27.0" prefWidth="127.0" text="Мои файлы">
          <font>
