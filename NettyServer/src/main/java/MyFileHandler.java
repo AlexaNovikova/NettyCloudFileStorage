@@ -3,10 +3,13 @@ import commands.*;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import java.io.*;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 
 
 public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
-    private String serverDir ="NettyServer/src/Files/";
+    private final String SERVER_DIR = "NettyServer"+File.separator+"src"+File.separator+"Files";
+    private String serverDir ="NettyServer"+File.separator+"src"+File.separator+"Files";
     private static NettyServer server;
     private  String username;
     private byte[] buffer = new byte[8189];
@@ -17,7 +20,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
     public MyFileHandler(NettyServer server, String username) {
         this.server = server;
         this.username= username;
-        serverDir =  serverDir + username;
+        serverDir =  serverDir +File.separator+ username;
     }
 
 
@@ -55,27 +58,34 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 ChangeDirectoryCommandData changeDirectoryCommandData = (ChangeDirectoryCommandData)commandFromClient.getData();
                 String directory = changeDirectoryCommandData.getPath();
                 System.out.println("Получена команда CD "+ directory);
+                File file = new File(serverDir);
+                if (directory.trim().equals("...")) {
+                    if (serverDir.equals(SERVER_DIR+File.separator+username)) {
+                        return;
+                    }
+                    File parent = new File(file.getParent());
+                    if (parent.exists()) {
+                        serverDir= parent.getPath();
+                    }
+                }
+                else {
+                    file = new File(serverDir+File.separator+directory);
+                    if (file.exists() && file.isDirectory()) {
+                        serverDir = serverDir+File.separator+directory;
+                    }
+                }
+                ArrayList<String>filesList = createListFiles();
+                Command commandToClient = new Command().sendListFiles(filesList);
+                ctx.writeAndFlush(commandToClient);
                 break;
             }
 
             case LS:{
                 System.out.println("Получена команда LS");
                 ListFilesCommandData listFilesCommandData = (ListFilesCommandData)commandFromClient.getData();
-                File dir = new File(serverDir);
-                StringBuilder sb = new StringBuilder(username).append(" files ->  \n");
-                File[] files = dir.listFiles();
-                if (files!=null) {
-                    for (File file : files) {
-                        sb.append(file.getName()).append(" ");
-                        if (file.isFile()) {
-                            sb.append("[FILE} | ").append(file.length()).append(" bytes.\n");
-                        } else {
-                            sb.append("[DIR]\n");
-                        }
-                    }
-                    Command commandToClient = new Command().sendListFiles(sb.toString());
-                    ctx.writeAndFlush(commandToClient);
-                }
+                ArrayList<String>filesList = createListFiles();
+                Command commandToClient = new Command().sendListFiles(filesList);
+                ctx.writeAndFlush(commandToClient);
                 break;
             }
 
@@ -84,7 +94,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 GetFileCommandData getFileCommandData = (GetFileCommandData) commandFromClient.getData();
                 String fileName = getFileCommandData.getFileName();
                 File fileToSend = new File(serverDir + "/"+fileName);
-                if (fileToSend.exists()) {
+                if (fileToSend.exists()&&fileToSend.isFile()) {
                     Long fileSize = fileToSend.length();
                     Command commandFile = new Command().sendFile(fileName, fileSize);
                     ctx.writeAndFlush(commandFile);
@@ -151,6 +161,24 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 break;
             }
 
+            case CREATE:{
+                System.out.println("Получена команда Create");
+                CreateDidCommandData createDidCommandData = (CreateDidCommandData) commandFromClient.getData();
+                String dirName = createDidCommandData.getDirName();
+                String fullDirName = serverDir+"/"+dirName;
+                File file = new File(fullDirName);
+                if(!file.exists()||(file.exists()&&!file.isDirectory()))
+                {
+                    new File(fullDirName).mkdir();
+                    Command commandToClient = new Command().success(" Создана директория "+ dirName);
+                    ctx.writeAndFlush(commandToClient);
+                }
+                else {
+                    Command commandToClient = new Command().error("Директория с таким именем уже существует на сервере!");
+                    ctx.writeAndFlush(commandToClient);
+                }
+            }
+
             case ERROR:{
                 System.out.println("Неизвестная команда");
                ErrorCommandData errorCommandData = (ErrorCommandData) commandFromClient.getData();
@@ -165,5 +193,28 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
             }
         }
 
+
     }
+
+    public ArrayList<String > createListFiles(){
+        File dir = new File(serverDir);
+        File[] files = dir.listFiles();
+        ArrayList<String> filesList = new ArrayList<>();
+            filesList.add(" ... ");
+        if (files!=null) {
+            for (File file : files) {
+                StringBuilder sb = new StringBuilder();
+                sb.append(file.getName()).append(" ");
+                if (file.isFile()) {
+                    sb.append("[FILE} | ").append(file.length()).append(" bytes.\n");
+                } else {
+                    sb.append("[DIR]\n");
+                }
+                filesList.add(sb.toString());
+                sb = new StringBuilder();
+            }
+        }
+        return filesList;
+    }
+
 }

@@ -3,6 +3,7 @@ import io.netty.handler.codec.serialization.ObjectEncoderOutputStream;
 import commands.*;
 import java.io.*;
 import java.net.Socket;
+import java.util.ArrayList;
 
 public class Network {
 
@@ -11,11 +12,14 @@ public class Network {
     private static final int BUFFER_SIZE = 8189;
     private ObjectEncoderOutputStream os;
     private ObjectDecoderInputStream is;
-    private static String clientDid = "Client/src/Files/";
-    private final Socket socket;
+    private static final String clientParent = "Client" +File.separator+"src" +File.separator+"Files";
+    private static String clientDir = "Client" +File.separator+"src" +File.separator+"Files";
+    private Socket socket;
     public static Network instance;
     private static byte[] buffer;
     private static String clientNick;
+    public boolean authOk;
+
 
     public static Network getInstance() throws IOException {
         if (instance == null) {
@@ -24,118 +28,250 @@ public class Network {
         return instance;
     }
 
-    private Network() throws IOException {
-        socket = new Socket(HOST, PORT);
-        os = new ObjectEncoderOutputStream(socket.getOutputStream());
-        is = new ObjectDecoderInputStream(socket.getInputStream());
-        buffer = new byte[BUFFER_SIZE];
+
+    public boolean connect() {
+        try {
+            socket = new Socket(HOST, PORT);
+            os = new ObjectEncoderOutputStream(socket.getOutputStream());
+            is = new ObjectDecoderInputStream(socket.getInputStream());
+            buffer = new byte[BUFFER_SIZE];
+            authOk=false;
+            return true;
+        } catch (IOException e) {
+            System.out.println("Соединение не было установлено!");
+            e.printStackTrace();
+            return false;
+        }
     }
 
-    public void sendCommand(String textFromClient, MyCloudController cloudController) throws IOException {
-
-        String[] msg = textFromClient.split(" ");
-        String commandType = msg[0];
-        String data;
-        if (msg.length > 1) {
-            data = textFromClient.split(" ", 2)[1];
-        } else {
-            data = "";
-        }
-        Command commandFromClient;
-        switch (commandType) {
-            case "/auth": {
-                if (data.split(" ").length < 2) {
-                    cloudController.showText("Не верно введена комманда - укажите /auth логин пароль");
-                } else {
-                    String login = data.split(" ", 2)[0];
-                    String password = data.split(" ", 2)[1];
-                    commandFromClient = new Command().authCommand(login, password);
-                    os.writeObject(commandFromClient);
-                }
-                break;
-            }
-            case "/ls": {
-                commandFromClient = new Command().listFilesCommand();
-                os.writeObject(commandFromClient);
-                File dir = new File(clientDid);
-                StringBuilder sb = new StringBuilder(clientNick).append(" files ->  \n");
-                File[] files = dir.listFiles();
-                if (files != null) {
-                    for (File file : files) {
-                        sb.append(file.getName()).append(" ");
-                        if (file.isFile()) {
-                            sb.append("[FILE} | ").append(file.length()).append(" bytes.\n");
-                        } else {
-                            sb.append("[DIR]\n");
+    public void start(MyCloudController cloudController){
+        Thread thread = new Thread(() -> {
+            while (true) {
+                try {
+                    Command message = readObject();
+                    switch (message.getType()){
+                        case AUTH_OK:{
+                            CommandResultOK dataAuthOk = (CommandResultOK) message.getData();
+                            String login  = dataAuthOk.getLogin();
+                            String result =dataAuthOk.getResult();
+                            setClientNick(login);
+                            System.out.println("Авторизация прошла");
+                            authOk=true;
+                            cloudController.showText(result);
+                            break;
+                        }
+                        case OK:{
+                            CommandResultOK success = (CommandResultOK) message.getData();
+                            String result =success.getResult();
+                            cloudController.showText(result);
+                            break;
+                        }
+                        case LS_OK:{
+                            SendListFilesCommandData listFilesFromServer = (SendListFilesCommandData) message.getData();
+                            ArrayList<String> listFiles = listFilesFromServer.getFiles();
+                            cloudController.showFilesOnCloud(listFiles);
+                            break;
+                        }
+                        case SEND:{
+                            SendFileCommandData sendFileCommandData = (SendFileCommandData) message.getData();
+                            getFile(sendFileCommandData, cloudController);
+                            break;
+                        }
+                        case ERROR:{
+                            ErrorCommandData errorCommandData = (ErrorCommandData)message.getData();
+                            cloudController.showText(errorCommandData.getError());
+                            break;
+                        }
+                        case UNKNOWN:{
+                            UnknownCommandData unknownCommandData =(UnknownCommandData)message.getData();
+                            cloudController.showText(unknownCommandData.getError());
+                            break;
+                        }
+                        case GET:{
+                            GetFileCommandData getFile = (GetFileCommandData)message.getData();
+                            cloudController.showText("Файл "+ getFile.getFileName()+ " будет отправлен на сервер.");
+                            sendFile(getFile.getFileName(),cloudController);
+                            break;
                         }
                     }
-                    cloudController.filesOnClient.clear();
-                    cloudController.filesOnClient.appendText(sb.toString());
+
+
+                } catch (ClassNotFoundException | IOException e) {
+              //      e.printStackTrace();
                 }
-                break;
             }
-            case "/cd": {
-                String directory = data;
-                if (data.equals("")) {
-                    cloudController.showText("Не верно введена комманда. Укажите путь (/cd директория)");
+        });
+        thread.setDaemon(true);
+        thread.start();
+    }
+
+
+    public void sendCommand(String textFromClient, MyCloudController cloudController){
+         try {
+             String[] msg = textFromClient.split(" ");
+             String commandType = msg[0];
+             String data;
+             if (msg.length > 1) {
+                 data = textFromClient.split(" ", 2)[1];
+             } else {
+                 data = "";
+             }
+             Command commandFromClient;
+
+             switch (commandType) {
+                 case "/auth": {
+                     if (data.split(" ").length < 2) {
+                         cloudController.showText("Неверно введена комманда - укажите /auth логин пароль");
+                     } else {
+                         String login = data.split(" ", 2)[0];
+                         String password = data.split(" ", 2)[1];
+                         commandFromClient = new Command().authCommand(login, password);
+                         os.writeObject(commandFromClient);
+                     }
+                     break;
+                 }
+                 case "/ls": {
+                     commandFromClient = new Command().listFilesCommand();
+                     os.writeObject(commandFromClient);
+                     ArrayList<String> fileNames = createListFiles();
+                     cloudController.showFilesOnClient(fileNames);
+                     break;
+                 }
+
+                 case "/cd": {
+                     if (data.equals("")) {
+                         cloudController.showText("Неверно введена комманда. Укажите путь (/cd директория)");
+                     } else {
+                         String directory;
+                         if (data.trim().equals("...")) {
+                             directory = data;
+                         } else {
+                             directory = data.split(" ")[0];
+                         }
+                         commandFromClient = new Command().changeDirectory(directory);
+                         os.writeObject(commandFromClient);
+                     }
+                     break;
+                 }
+
+                 case "/get": {
+                     if (data.equals("")) {
+                         cloudController.showText("Неверно введена комманда. Укажите имя файла");
+                     } else {
+                         String fileName = data;
+                         commandFromClient = new Command().getFileFromServer(fileName);
+                         os.writeObject(commandFromClient);
+                     }
+                     break;
+                 }
+
+                 case "/send": {
+                     if (data.equals("")) {
+                         cloudController.showText("Неверно введена комманда. Укажите имя файла");
+                     } else {
+                         String fileName = data;
+                         File fileToServer = new File(clientDir + File.separator + fileName);
+                         if (!fileToServer.exists()) {
+                             cloudController.showText("Файл не существует!");
+                         } else if (fileToServer.isDirectory()) {
+                             cloudController.showText("Выбрана директория!");
+
+                         } else {
+                             Long fileSize = fileToServer.length();
+                             Command fileToSend = new Command().sendFile(fileName, fileSize);
+                             os.writeObject(fileToSend);
+
+                         }
+                     }
+                     break;
+                 }
+
+                 case "/mkdir": {
+                     if (data.equals("")) {
+                         cloudController.showText("Неверно введена команда. Укажите имя новой директории.");
+                     } else if (data.split(" ").length > 1) {
+                         cloudController.showText("Неверно введена команда. Неверно указано имя новой директории.");
+
+                     } else {
+                         String dirName = data;
+                         Command createNewDir = new Command().createNewDir(dirName);
+                         os.writeObject(createNewDir);
+                         File newDir = new File(clientDir + File.separator + dirName);
+                         if (!newDir.exists()) {
+                             newDir.mkdir();
+                         }
+                         if (newDir.exists() && !newDir.isDirectory()) {
+                             newDir.mkdir();
+                         }
+                     }
+                     break;
+                 }
+
+                 default:
+                     cloudController.showText("Неизвестная команда. Повторите ввод. Для справки - Help/About.");
+                     break;
+             }
+
+             os.flush();
+         }
+         catch (IOException e){
+             e.printStackTrace();
+         }
+    }
+
+    public ArrayList<String> createListFiles() {
+        File dir = new File(clientDir);
+        File[] files = dir.listFiles();
+        ArrayList<String >fileNames = new ArrayList<>();
+        fileNames.add(" ...  \n");
+        StringBuilder sb = new StringBuilder();
+        if (files != null) {
+            for (File file : files) {
+                sb.append(file.getName()).append(" ");
+
+                if (file.isFile()) {
+                    sb.append("[FILE} | ").append(file.length()).append(" bytes.\n");
+
                 } else {
-                    commandFromClient = new Command().changeDirectory(directory);
-                    os.writeObject(commandFromClient);
+                    sb.append("[DIR]\n");
                 }
-                break;
+                fileNames.add(sb.toString());
+                sb = new StringBuilder();
             }
-
-            case "/get": {
-                if (data.equals("")) {
-                    cloudController.showText("Не верно введена комманда. Укажите имя файла");
-                } else {
-                    String fileName = data;
-                    commandFromClient = new Command().getFileFromServer(fileName);
-                    os.writeObject(commandFromClient);
-                }
-                break;
-            }
-
-            case "/send": {
-                if (data.equals("")) {
-                    cloudController.showText("Не верно введена комманда. Укажите имя файла");
-                } else {
-                    String fileName = data;
-                    File fileToServer = new File(clientDid + "/" + fileName);
-                    if (!fileToServer.exists()) {
-                        cloudController.showText("Файл не существует!");
-                    } else {
-                        Long fileSize = fileToServer.length();
-                        Command fileToSend = new Command().sendFile(fileName, fileSize);
-                        os.writeObject(fileToSend);
-
-                    }
-                }
-                break;
-            }
-
-            default:
-                cloudController.showText("Неизвестная команда. Повторите ввод. Для справки - Help/About.");
-                break;
         }
+            return fileNames;
+    }
 
+    public void write(Command command) throws IOException {
+        os.writeObject(command);
         os.flush();
     }
 
-    public void write(String message) throws IOException {
-        os.writeUTF(message);
-        os.flush();
+    public void setClientDir(String dir) {
+        Network.clientDir = clientDir+File.separator+dir;
+    }
+
+    public void setClientDirDirect(String dir){
+        Network.clientDir=dir;
+    }
+
+    public String getClientDir() {
+        return clientDir;
     }
 
     public void setClientNick(String clientNick) {
         this.clientNick = clientNick;
     }
 
+    public  String getClientNick() {
+        return clientNick;
+    }
+
     public void getFile(SendFileCommandData sendFileCommandData, MyCloudController cloudController) throws IOException {
         int ptr = 0;
         Long fileSize = sendFileCommandData.getFileSize();
         String fileName = sendFileCommandData.getFileName();
-        File newFile = new File(clientDid + fileName);
+        File newFile = new File(clientDir +File.separator+ fileName);
         try {
             try (FileOutputStream fos = new FileOutputStream(newFile, false)) {
                 if (fileSize > buffer.length) {
@@ -159,8 +295,9 @@ public class Network {
                 }
             }
             cloudController.showText("Файл успешно получен с сервера!");
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+        }
+        catch (IOException | ClassNotFoundException e) {
+          //  e.printStackTrace();
         }
     }
 
@@ -169,14 +306,18 @@ public class Network {
         return (Command) is.readObject();
     }
 
-    public void close() throws IOException {
+    public void close() {
+        try{
         is.close();
         os.close();
-        socket.close();
+        socket.close();}
+        catch (IOException e){
+           e.printStackTrace();
+        }
     }
 
     public void sendFile(String fileName, MyCloudController cloudController) {
-        File fileToServer = new File(clientDid + "/" + fileName);
+        File fileToServer = new File(clientDir + File.separator + fileName);
         Long fileSize = fileToServer.length();
         try (InputStream fis = new FileInputStream(fileToServer)) {
             int ptr = 0;

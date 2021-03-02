@@ -2,6 +2,7 @@
 import commands.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class Command implements Serializable {
 
@@ -36,15 +37,15 @@ public class Command implements Serializable {
 
     public Command successAuth (String login){
         Command command = new Command();
-        command.type = CommandType.OK;
+        command.type = CommandType.AUTH_OK;
         command.data = new CommandResultOK("Авторизация прошла успешно!", login);
         return command;
     }
 
-    public Command sendListFiles(String files){
+    public Command sendListFiles(ArrayList<String> filesList){
         Command command = new Command();
         command.type=CommandType.LS_OK;
-        command.data=new SendListFilesCommandData(files);
+        command.data=new SendListFilesCommandData(filesList);
         return command;
     }
 
@@ -76,7 +77,19 @@ public class Command implements Serializable {
         return command;
     }
 
+    public Command createNewDir(String dirName){
+        Command command = new Command();
+        command.type= CommandType.CREATE;
+        command.data= new CreateDidCommandData(dirName);
+        return command;
+    }
 
+    public Command success(String message){
+        Command command = new Command();
+        command.type = CommandType.OK;
+        command.data = new CommandResultOK("Операция успешно выполнена!", message);
+        return command;
+    }
 
     public CommandType getType() {
         return type;
