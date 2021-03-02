@@ -1,15 +1,17 @@
 package commands;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class SendListFilesCommandData implements Serializable {
-    String files;
 
-    public SendListFilesCommandData(String files){
-        this.files=files;
+    ArrayList<String> filesList;
+
+    public SendListFilesCommandData(ArrayList<String> files){
+        this.filesList=files;
     }
 
-    public String getFiles() {
-        return files;
+    public ArrayList<String> getFiles() {
+        return filesList;
     }
 }

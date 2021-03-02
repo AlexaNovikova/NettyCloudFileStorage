@@ -4,6 +4,7 @@ import java.io.Serializable;
 
 public class ChangeDirectoryCommandData implements Serializable {
     String path;
+
     public ChangeDirectoryCommandData(String path){
         this.path=path;
     }

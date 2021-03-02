@@ -2,6 +2,7 @@
 import commands.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 
 public class Command implements Serializable {
 
@@ -41,10 +42,10 @@ public class Command implements Serializable {
         return command;
     }
 
-    public Command sendListFiles(String files){
+    public Command sendListFiles(ArrayList<String> filesList){
         Command command = new Command();
         command.type=CommandType.LS_OK;
-        command.data=new SendListFilesCommandData(files);
+        command.data=new SendListFilesCommandData(filesList);
         return command;
     }
 
