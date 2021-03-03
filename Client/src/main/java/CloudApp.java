@@ -72,6 +72,8 @@ public class CloudApp extends Application {
         primaryStage.show();
         primaryStage.setTitle(network.getClientNick());
         network.sendCommand("/ls",myCloudController);
+        myCloudController.clientPath.setText(network.getClientDir());
+        myCloudController.serverPath.setText(network.getServerDir());
     }
 
     public void showErrorMessage(String message, String errorMessage) {

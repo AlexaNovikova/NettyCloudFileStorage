@@ -13,9 +13,9 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane accessibleRole="CHECK_MENU_ITEM" prefHeight="620.0" prefWidth="861.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MyCloudController">
+<AnchorPane accessibleRole="CHECK_MENU_ITEM" prefHeight="675.0" prefWidth="867.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MyCloudController">
    <children>
-      <MenuBar layoutY="2.0" prefHeight="27.0" prefWidth="861.0" AnchorPane.bottomAnchor="622.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <MenuBar layoutX="-5.0" layoutY="1.0" prefHeight="27.0" prefWidth="873.0" AnchorPane.bottomAnchor="647.0" AnchorPane.leftAnchor="-5.0" AnchorPane.rightAnchor="-1.0" AnchorPane.topAnchor="1.0">
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
@@ -34,28 +34,28 @@
           </Menu>
         </menus>
       </MenuBar>
-      <Label layoutX="155.0" layoutY="45.0" prefHeight="27.0" prefWidth="127.0" text="Мои файлы">
+      <Label layoutX="156.0" layoutY="46.0" prefHeight="30.0" prefWidth="88.0" text="My Files">
          <font>
-            <Font size="18.0" />
+            <Font size="20.0" />
          </font>
          <tooltip>
             <Tooltip text="Мои файлы" />
          </tooltip>
       </Label>
-      <Label layoutX="598.0" layoutY="45.0" text="Мое облако">
+      <Label layoutX="582.0" layoutY="46.0" text="My Cloud">
          <font>
-            <Font size="18.0" />
+            <Font size="20.0" />
          </font>
       </Label>
-      <ListView fx:id="filesClientList" layoutX="63.0" layoutY="85.0" prefHeight="486.0" prefWidth="330.0" />
-      <ListView fx:id="filesCloudList" layoutX="479.0" layoutY="85.0" prefHeight="486.0" prefWidth="330.0" />
+      <ListView fx:id="filesClientList" layoutX="63.0" layoutY="146.0" prefHeight="486.0" prefWidth="330.0" />
+      <ListView fx:id="filesCloudList" layoutX="473.0" layoutY="146.0" prefHeight="486.0" prefWidth="330.0" />
        <fx:define>
            <Image fx:id="btnSendImage" url="@../images/sendToCloud.png" />
        </fx:define>
        <fx:define>
            <Image fx:id="btnGetImage" url="@../images/getFromCloud.png" />
        </fx:define>
-      <Button fx:id="get" cacheHint="ROTATE" layoutX="402.0" layoutY="453.0" mnemonicParsing="false" onAction="#getCommand" onMouseEntered="#changeStyleOnMouseEnterBtnGet" onMouseExited="#changeStyleOnMouseExitBtnGet" prefHeight="60.0" prefWidth="60.0" style="-fx-background-color: transparent;">
+      <Button fx:id="get" cacheHint="ROTATE" layoutX="398.0" layoutY="531.0" mnemonicParsing="false" onAction="#getCommand" onMouseEntered="#changeStyleOnMouseEnterBtnGet" onMouseExited="#changeStyleOnMouseExitBtnGet" prefHeight="60.0" prefWidth="60.0" style="-fx-background-color: transparent;">
          <cursor>
             <Cursor fx:constant="DEFAULT" />
          </cursor>
@@ -71,7 +71,7 @@
          <tooltip>
             <Tooltip autoHide="true" text="Get File From Cloud" />
          </tooltip></Button>
-      <Button ellipsisString="" layoutX="404.0" layoutY="135.0" mnemonicParsing="false" onAction="#sendCommand" onMouseEntered="#changeStyleOnMouseEnterBtnSend" onMouseExited="#changeStyleOnMouseExitBtnSend" prefHeight="59.0" prefWidth="55.0" style="-fx-background-color: transparent;" AnchorPane.rightAnchor="389.8" AnchorPane.topAnchor="135.0">
+      <Button ellipsisString="" layoutX="399.0" layoutY="189.0" mnemonicParsing="false" onAction="#sendCommand" onMouseEntered="#changeStyleOnMouseEnterBtnSend" onMouseExited="#changeStyleOnMouseExitBtnSend" prefHeight="59.0" prefWidth="55.0" style="-fx-background-color: transparent;" AnchorPane.rightAnchor="400.8" AnchorPane.topAnchor="189.0">
          <graphic>
                  <ImageView fx:id="sendBtn" fitHeight="52.0" fitWidth="51.0" focusTraversable="true" nodeOrientation="INHERIT" style="-fx-focus-traversable: true;">
                      <cursor>
@@ -84,7 +84,7 @@
             <Tooltip text="Send File To Cloud" />
          </tooltip>
       </Button>
-      <Button layoutX="402.0" layoutY="293.0" mnemonicParsing="false" onAction="#updateCommand" onMouseEntered="#changeStyleOnMouseEnterBtnUpdate" onMouseExited="#changeStyleOnMouseExitBtnUpdate" prefHeight="60.0" prefWidth="59.0" style="-fx-background-color: transparent;">
+      <Button layoutX="398.0" layoutY="358.0" mnemonicParsing="false" onAction="#updateCommand" onMouseEntered="#changeStyleOnMouseEnterBtnUpdate" onMouseExited="#changeStyleOnMouseExitBtnUpdate" prefHeight="60.0" prefWidth="59.0" style="-fx-background-color: transparent;">
          <graphic>
             <ImageView fx:id="updateBtn" fitHeight="54.0" fitWidth="59.0" pickOnBounds="true" preserveRatio="true">
                <image>
@@ -96,6 +96,16 @@
             <Tooltip text="Update list Files" />
          </tooltip>
       </Button>
+      <Label fx:id="clientPath" layoutX="62.0" layoutY="97.0">
+         <font>
+            <Font size="18.0" />
+         </font>
+      </Label>
+      <Label fx:id="serverPath" layoutX="472.0" layoutY="97.0">
+         <font>
+            <Font size="18.0" />
+         </font>
+      </Label>
 
    </children>
 </AnchorPane>

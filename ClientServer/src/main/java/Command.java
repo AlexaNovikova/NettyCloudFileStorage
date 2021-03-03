@@ -42,10 +42,10 @@ public class Command implements Serializable {
         return command;
     }
 
-    public Command sendListFiles(ArrayList<String> filesList){
+    public Command sendListFiles(ArrayList<String> filesList, String serverDir){
         Command command = new Command();
         command.type=CommandType.LS_OK;
-        command.data=new SendListFilesCommandData(filesList);
+        command.data=new SendListFilesCommandData(filesList, serverDir);
         return command;
     }
 
@@ -91,6 +91,12 @@ public class Command implements Serializable {
         return command;
     }
 
+    public Command deleteFile(String fileName){
+        Command command= new Command();
+        command.type=CommandType.DELETE;
+        command.data=new DeleteFileCommandData(fileName);
+        return command;
+    }
     public CommandType getType() {
         return type;
     }

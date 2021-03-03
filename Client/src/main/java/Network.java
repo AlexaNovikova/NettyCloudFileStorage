@@ -19,6 +19,7 @@ public class Network {
     private static byte[] buffer;
     private static String clientNick;
     public boolean authOk;
+    private String serverDir;
 
 
     public static Network getInstance() throws IOException {
@@ -69,6 +70,7 @@ public class Network {
                         case LS_OK:{
                             SendListFilesCommandData listFilesFromServer = (SendListFilesCommandData) message.getData();
                             ArrayList<String> listFiles = listFilesFromServer.getFiles();
+                            serverDir = listFilesFromServer.getServerDir();
                             cloudController.showFilesOnCloud(listFiles);
                             break;
                         }
@@ -79,12 +81,12 @@ public class Network {
                         }
                         case ERROR:{
                             ErrorCommandData errorCommandData = (ErrorCommandData)message.getData();
-                            cloudController.showText("Операция не может быть выполнена!",errorCommandData.getError());
+                            cloudController.showError("Операция не может быть выполнена!",errorCommandData.getError());
                             break;
                         }
                         case UNKNOWN:{
                             UnknownCommandData unknownCommandData =(UnknownCommandData)message.getData();
-                            cloudController.showText("Неизвестная команда от сервера!", unknownCommandData.getError());
+                            cloudController.showError("Неизвестная команда от сервера!", unknownCommandData.getError());
                             break;
                         }
                         case GET:{
@@ -155,18 +157,24 @@ public class Network {
 
                  case "/get": {
                      if (data.equals("")) {
-                         cloudController.showError("Команда не может быть выполнена!","Неверно введена комманда. Укажите имя файла");
+                         cloudController.showError("Команда не может быть выполнена!","Выберите файл из списка (Мое облако) и выделите его, щелкнув мышью.");
                      } else {
                          String fileName = data;
-                         commandFromClient = new Command().getFileFromServer(fileName);
-                         os.writeObject(commandFromClient);
+                         File file = new File(clientDir+File.separator+fileName);
+                         if (file.exists()){
+                             cloudController.showError("Команда не выполнена!","Файл уже существует!");
+                         }
+                         else {
+                             commandFromClient = new Command().getFileFromServer(fileName);
+                             os.writeObject(commandFromClient);
+                         }
                      }
                      break;
                  }
 
                  case "/send": {
                      if (data.equals("")) {
-                         cloudController.showError("Команда не может быть выполнена!","Неверно введена комманда. Укажите имя файла");
+                         cloudController.showError("Команда не может быть выполнена!","Выберите файл из списка (Мои файлы) и выделите его, щелкнув мышью.");
                      } else {
                          String fileName = data;
                          File fileToServer = new File(clientDir + File.separator + fileName);
@@ -202,6 +210,17 @@ public class Network {
                          if (newDir.exists() && !newDir.isDirectory()) {
                              newDir.mkdir();
                          }
+                     }
+                     break;
+                 }
+
+                 case "/del":{
+                     if (data.equals("")) {
+                         cloudController.showError("Команда не может быть выполнена!","Выберите файл из списка (Мое облако) и выделите его, щелкнув мышью.");
+                     } else {
+                         String fileName = data.split(" ")[0];
+                         Command fileToDelete = new Command().deleteFile(fileName);
+                         os.writeObject(fileToDelete);
                      }
                      break;
                  }
@@ -264,6 +283,10 @@ public class Network {
 
     public  String getClientNick() {
         return clientNick;
+    }
+
+    public String getServerDir() {
+        return serverDir;
     }
 
     public void getFile(SendFileCommandData sendFileCommandData, MyCloudController cloudController) throws IOException {

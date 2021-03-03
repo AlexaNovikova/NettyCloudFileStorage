@@ -2,9 +2,14 @@
 import commands.*;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
+
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Optional;
 
 
 public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
@@ -75,7 +80,8 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                     }
                 }
                 ArrayList<String>filesList = createListFiles();
-                Command commandToClient = new Command().sendListFiles(filesList);
+                String serverDirToClient = serverDir.replace(SERVER_DIR+File.separator,"");
+                Command commandToClient = new Command().sendListFiles(filesList,serverDirToClient);
                 ctx.writeAndFlush(commandToClient);
                 break;
             }
@@ -84,7 +90,8 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 System.out.println("Получена команда LS");
                 ListFilesCommandData listFilesCommandData = (ListFilesCommandData)commandFromClient.getData();
                 ArrayList<String>filesList = createListFiles();
-                Command commandToClient = new Command().sendListFiles(filesList);
+                String serverDirToClient = serverDir.replace(SERVER_DIR+File.separator, "");
+                Command commandToClient = new Command().sendListFiles(filesList,serverDirToClient);
                 ctx.writeAndFlush(commandToClient);
                 break;
             }
@@ -113,6 +120,10 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                         }
                 }
 
+                else if(fileToSend.isDirectory()){
+                    Command commandToClient = new Command().error("Выбрана директория! Выберите файл.");
+                    ctx.writeAndFlush(commandToClient);
+                }
                 else {
                     Command commandToClient = new Command().error("Файла не существует!");
                     ctx.writeAndFlush(commandToClient);
@@ -165,7 +176,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 System.out.println("Получена команда Create");
                 CreateDidCommandData createDidCommandData = (CreateDidCommandData) commandFromClient.getData();
                 String dirName = createDidCommandData.getDirName();
-                String fullDirName = serverDir+"/"+dirName;
+                String fullDirName = serverDir+File.separator+dirName;
                 File file = new File(fullDirName);
                 if(!file.exists()||(file.exists()&&!file.isDirectory()))
                 {
@@ -177,6 +188,27 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                     Command commandToClient = new Command().error("Директория с таким именем уже существует на сервере!");
                     ctx.writeAndFlush(commandToClient);
                 }
+            }
+
+            case DELETE:{
+                System.out.println("Получена команда Delete");
+                DeleteFileCommandData deleteFileCommandData = (DeleteFileCommandData) commandFromClient.getData();
+                String fileName = deleteFileCommandData.getFileName();
+                File fileToDelete = new File(serverDir+File.separator+fileName);
+                if (fileToDelete.exists()) {
+                    if (!fileToDelete.isDirectory()) {
+                        fileToDelete.delete();
+                    } else if (fileToDelete.isDirectory()) {
+                        deleteDirectory(fileToDelete);
+                    }
+                    Command commandToClient = new Command().success("Файл удален из хранилища!");
+                    ctx.writeAndFlush(commandToClient);
+                }
+                else {
+                    Command commandToClient = new Command().error("Файл не существует!");
+                    ctx.writeAndFlush(commandToClient);
+                }
+                break;
             }
 
             case ERROR:{
@@ -215,6 +247,17 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
             }
         }
         return filesList;
+    }
+    private void deleteDirectory(File file) {
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                if (! Files.isSymbolicLink(f.toPath())) {
+                    deleteDirectory(f);
+                }
+            }
+        }
+        file.delete();
     }
 
 }
