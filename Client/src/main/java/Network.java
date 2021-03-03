@@ -57,13 +57,13 @@ public class Network {
                             setClientNick(login);
                             System.out.println("Авторизация прошла");
                             authOk=true;
-                            cloudController.showText(result);
+                            cloudController.showText(result, login+ ", вы успешно вошли в облачное хранилище.");
                             break;
                         }
                         case OK:{
                             CommandResultOK success = (CommandResultOK) message.getData();
                             String result =success.getResult();
-                            cloudController.showText(result);
+                            cloudController.showText("Операция завершена!",result);
                             break;
                         }
                         case LS_OK:{
@@ -79,17 +79,16 @@ public class Network {
                         }
                         case ERROR:{
                             ErrorCommandData errorCommandData = (ErrorCommandData)message.getData();
-                            cloudController.showText(errorCommandData.getError());
+                            cloudController.showText("Операция не может быть выполнена!",errorCommandData.getError());
                             break;
                         }
                         case UNKNOWN:{
                             UnknownCommandData unknownCommandData =(UnknownCommandData)message.getData();
-                            cloudController.showText(unknownCommandData.getError());
+                            cloudController.showText("Неизвестная команда от сервера!", unknownCommandData.getError());
                             break;
                         }
                         case GET:{
                             GetFileCommandData getFile = (GetFileCommandData)message.getData();
-                            cloudController.showText("Файл "+ getFile.getFileName()+ " будет отправлен на сервер.");
                             sendFile(getFile.getFileName(),cloudController);
                             break;
                         }
@@ -121,7 +120,7 @@ public class Network {
              switch (commandType) {
                  case "/auth": {
                      if (data.split(" ").length < 2) {
-                         cloudController.showText("Неверно введена комманда - укажите /auth логин пароль");
+                         cloudController.showError("Команда не может быть выполнена!","Неверно введена комманда - укажите /auth логин пароль");
                      } else {
                          String login = data.split(" ", 2)[0];
                          String password = data.split(" ", 2)[1];
@@ -140,7 +139,7 @@ public class Network {
 
                  case "/cd": {
                      if (data.equals("")) {
-                         cloudController.showText("Неверно введена комманда. Укажите путь (/cd директория)");
+                         cloudController.showError( "Команда не может быть выполнена!","Неверно введена комманда. Укажите путь (/cd директория)");
                      } else {
                          String directory;
                          if (data.trim().equals("...")) {
@@ -156,7 +155,7 @@ public class Network {
 
                  case "/get": {
                      if (data.equals("")) {
-                         cloudController.showText("Неверно введена комманда. Укажите имя файла");
+                         cloudController.showError("Команда не может быть выполнена!","Неверно введена комманда. Укажите имя файла");
                      } else {
                          String fileName = data;
                          commandFromClient = new Command().getFileFromServer(fileName);
@@ -167,14 +166,14 @@ public class Network {
 
                  case "/send": {
                      if (data.equals("")) {
-                         cloudController.showText("Неверно введена комманда. Укажите имя файла");
+                         cloudController.showError("Команда не может быть выполнена!","Неверно введена комманда. Укажите имя файла");
                      } else {
                          String fileName = data;
                          File fileToServer = new File(clientDir + File.separator + fileName);
                          if (!fileToServer.exists()) {
-                             cloudController.showText("Файл не существует!");
+                             cloudController.showError("Команда не может быть выполнена!","Файл не существует!");
                          } else if (fileToServer.isDirectory()) {
-                             cloudController.showText("Выбрана директория!");
+                             cloudController.showError("Команда не может быть выполнена!","Выбрана директория!");
 
                          } else {
                              Long fileSize = fileToServer.length();
@@ -188,9 +187,9 @@ public class Network {
 
                  case "/mkdir": {
                      if (data.equals("")) {
-                         cloudController.showText("Неверно введена команда. Укажите имя новой директории.");
+                         cloudController.showError("Неверно введена команда.", "Укажите имя новой директории.");
                      } else if (data.split(" ").length > 1) {
-                         cloudController.showText("Неверно введена команда. Неверно указано имя новой директории.");
+                         cloudController.showError("Неверно введена команда. ","Неверно указано имя новой директории.");
 
                      } else {
                          String dirName = data;
@@ -208,7 +207,7 @@ public class Network {
                  }
 
                  default:
-                     cloudController.showText("Неизвестная команда. Повторите ввод. Для справки - Help/About.");
+                     cloudController.showError("Неизвестная команда."," Повторите ввод. Для справки - Help/About.");
                      break;
              }
 
@@ -294,7 +293,7 @@ public class Network {
                     fileSize -= ptr;
                 }
             }
-            cloudController.showText("Файл успешно получен с сервера!");
+            cloudController.showText("Операция выполнена!","Файл успешно получен с сервера!");
         }
         catch (IOException | ClassNotFoundException e) {
           //  e.printStackTrace();
@@ -336,7 +335,7 @@ public class Network {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        cloudController.showText("Файл успешно отправлен на сервер!");
+        cloudController.showText("Операция выполнена!","Файл успешно отправлен на сервер!");
     }
 }
 

@@ -1,12 +1,13 @@
 import javafx.application.Application;
-import javafx.event.EventHandler;
+
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.WindowEvent;
+
 
 import java.io.IOException;
 
@@ -63,12 +64,14 @@ public class CloudApp extends Application {
         AuthDialogController authDialogController = authLoader.getController();
         authDialogController.setNetwork(network);
         authDialogController.setCloudApp(this);
+
     }
 
     public void showFileMessenger() {
         authStage.close();
         primaryStage.show();
         primaryStage.setTitle(network.getClientNick());
+        network.sendCommand("/ls",myCloudController);
     }
 
     public void showErrorMessage(String message, String errorMessage) {

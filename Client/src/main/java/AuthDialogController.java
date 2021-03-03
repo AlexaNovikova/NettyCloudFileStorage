@@ -50,6 +50,14 @@ import javafx.scene.control.TextField;
             this.network = network;
         }
 
+        public PasswordField getPassField() {
+            return passField;
+        }
+
+        public TextField getLoginField() {
+            return loginField;
+        }
+
         public void setCloudApp(CloudApp cloudApp) {
             this.cloudApp = cloudApp;
         }

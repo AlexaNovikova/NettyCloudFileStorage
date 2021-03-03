@@ -32,6 +32,7 @@ public class MyCloudController implements Initializable {
     public ImageView sendBtn;
     public ImageView getBtn;
     public ImageView updateBtn;
+    public Button get;
     private String selectedFile;
     private String selectedFileOnCloud;
     private static final String clientParent = "Client"+File.separator+"src"+File.separator+ "Files";
@@ -161,10 +162,23 @@ public class MyCloudController implements Initializable {
         }
 
 
-    public void showText(String text){
+    public void showText(String type,String text){
         Platform.runLater(() -> {
-            resultOrAnswer.clear();
-            resultOrAnswer.appendText(text + "\n");
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Успех!");
+        alert.setHeaderText(type);
+        alert.setContentText(text);
+        alert.showAndWait();
+        });
+    }
+
+    public void showError(String type,String text){
+        Platform.runLater(() -> {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Ошибка!");
+            alert.setHeaderText(type);
+            alert.setContentText(text);
+            alert.showAndWait();
         });
     }
 //    public  void showFilesOnClient (String files) {

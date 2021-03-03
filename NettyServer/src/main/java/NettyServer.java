@@ -11,12 +11,13 @@ import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
 
 
+import java.sql.SQLException;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class NettyServer {
 
     private ConcurrentHashMap<ChannelHandlerContext, String> clients;
-
+    private BaseAuthService authService;
     public NettyServer(){
 
         clients=new ConcurrentHashMap();
@@ -44,14 +45,18 @@ public class NettyServer {
                             );
                         }
                     });
+
             ChannelFuture future = bootstrap.bind(8189).sync();
             System.out.println("Server started.");
+            authService = new BaseAuthService();
             future.channel().closeFuture().sync();
         }
-        catch (InterruptedException e){
-            System.out.println("Server was broken");;
+        catch (InterruptedException e) {
+            System.out.println("Server was broken");
+
         }
-        finally {
+         finally {
+            authService.disconnect();
             auth.shutdownGracefully();
             worker.shutdownGracefully();
         }
@@ -59,6 +64,10 @@ public class NettyServer {
 
     public ConcurrentHashMap<ChannelHandlerContext, String> getClients() {
         return clients;
+    }
+
+    public BaseAuthService getAuthService() {
+        return authService;
     }
 
     public static void main(String[] args) {

@@ -4,6 +4,7 @@ import io.netty.channel.SimpleChannelInboundHandler;
 
 public class AuthHandler extends SimpleChannelInboundHandler<Command> {
     private NettyServer server;
+    private BaseAuthService authService;
 
     public AuthHandler(NettyServer server) {
         this.server = server;
@@ -21,7 +22,7 @@ public class AuthHandler extends SimpleChannelInboundHandler<Command> {
             AuthCommandData authCommand = (AuthCommandData) commandFromClient.getData();
             String login = authCommand.getLogin();
             String password = authCommand.getPassword();
-            BaseAuthService authService = new BaseAuthService();
+            authService = server.getAuthService();
             String successAuth = authService.checkAuth(login, password);
             if (successAuth != null) {
                 ctx.pipeline().remove(AuthHandler.class);

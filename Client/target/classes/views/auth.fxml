@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.PasswordField?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
@@ -23,11 +24,17 @@
          <font>
             <Font size="18.0" />
          </font>
+         <tooltip>
+            <Tooltip text="Enter Login" />
+         </tooltip>
       </TextField>
       <PasswordField fx:id="passField" layoutX="139.0" layoutY="114.0" onAction="#checkAuth" prefHeight="39.0" prefWidth="316.0">
          <font>
             <Font size="18.0" />
          </font>
+         <tooltip>
+            <Tooltip text="Enter password" />
+         </tooltip>
       </PasswordField>
       <Button layoutX="139.0" layoutY="181.0" mnemonicParsing="false" onAction="#checkAuth" prefHeight="39.0" prefWidth="93.0" text="Вход">
          <font>

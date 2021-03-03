@@ -7,6 +7,14 @@ public class BaseAuthService {
     private PreparedStatement authPrepStm;
     private PreparedStatement changeNickStm;
 
+
+    public BaseAuthService(){
+        try {
+            connect();
+        } catch (SQLException|ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
     public void connect() throws ClassNotFoundException, SQLException {
         Class.forName("org.sqlite.JDBC");
         connection = DriverManager.getConnection("jdbc:sqlite:CloudUsers.db");
@@ -18,7 +26,6 @@ public class BaseAuthService {
         } catch (SQLException throwables) {
             throwables.printStackTrace();
         }
-
     }
 
 //public Integer registration (String login, String password) {
@@ -51,12 +58,6 @@ public void authStatement () throws SQLException {
 }
 
     public String checkAuth(String login, String password){
-
-        try {
-            connect();
-        } catch (SQLException|ClassNotFoundException e) {
-           e.printStackTrace();
-        }
         try {
             authStatement();
             authPrepStm.setString(1,login);
@@ -64,20 +65,25 @@ public void authStatement () throws SQLException {
             ResultSet rez = authPrepStm.executeQuery();
             if (rez.next()) {
                 System.out.println(login+ " прошел авторизацию.");
-                authPrepStm.close();
+
                 return login;
             }
             else {
-                authPrepStm.close();
+
                 return null;
             }
 
         } catch (SQLException throwables) {
 
-           // throwables.printStackTrace();
+        throwables.printStackTrace();
         }
         finally {
-            disconnect();
+
+            try {
+                authPrepStm.close();
+            } catch (SQLException throwables) {
+                throwables.printStackTrace();
+            }
         }
         return null;
      }
