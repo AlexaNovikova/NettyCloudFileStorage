@@ -1,6 +1,7 @@
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 import javafx.scene.control.TextArea;
@@ -36,6 +37,8 @@ public class MyCloudController implements Initializable {
     public Button get;
     public Label clientPath;
     public Label serverPath;
+    public ImageView addOnClient;
+    public ImageView addOnServer;
     private String selectedFile;
     private String selectedFileOnCloud;
     private static final String clientParent = "Client"+File.separator+"src"+File.separator+ "Files";
@@ -285,5 +288,38 @@ public class MyCloudController implements Initializable {
 
     public void setNetwork(Network network) {
         this.network = network;
+    }
+
+    public void addDirOnClient(ActionEvent actionEvent) {
+        TextInputDialog textInputDialog = new TextInputDialog("");
+        textInputDialog.setHeaderText("Введите имя директории.");
+        textInputDialog.showAndWait();
+        String nameDir = textInputDialog.getResult();
+        File file = new File(network.getClientDir()+File.separator+nameDir);
+        if (file.exists()&& file.isDirectory()){
+            showError("Невозможно выполнить операцию!", "Директория с таким именем уже создана!");
+        }
+        else {
+            file.mkdir();
+        }
+    }
+
+    public void addDirOnCloud(ActionEvent actionEvent) {
+    }
+
+    public void changeStyleOnMouseEnterBtnAddClient(MouseEvent mouseEvent) {
+        setActiveButtonStyle(addOnClient);
+    }
+
+    public void changeStyleOnMouseExitBtnAddClient(MouseEvent mouseEvent) {
+        addOnClient.setEffect(null);
+    }
+
+    public void changeStyleOnMouseEnterBtnAddCloud(MouseEvent mouseEvent) {
+        setActiveButtonStyle(addOnServer);
+    }
+
+    public void changeStyleOnMouseExitBtnAddCloud(MouseEvent mouseEvent) {
+        addOnServer.setEffect(null);
     }
 }

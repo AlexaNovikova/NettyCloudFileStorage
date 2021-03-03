@@ -13,9 +13,9 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane accessibleRole="CHECK_MENU_ITEM" prefHeight="675.0" prefWidth="867.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MyCloudController">
+<AnchorPane accessibleRole="CHECK_MENU_ITEM" prefHeight="675.0" prefWidth="867.0" styleClass="bodybg" stylesheets="@../style.css" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MyCloudController">
    <children>
-      <MenuBar layoutX="-5.0" layoutY="1.0" prefHeight="27.0" prefWidth="873.0" AnchorPane.bottomAnchor="647.0" AnchorPane.leftAnchor="-5.0" AnchorPane.rightAnchor="-1.0" AnchorPane.topAnchor="1.0">
+      <MenuBar layoutX="-5.0" layoutY="1.0" prefHeight="27.0" prefWidth="873.0" styleClass="menu" stylesheets="@../style.css" AnchorPane.bottomAnchor="647.0" AnchorPane.leftAnchor="-5.0" AnchorPane.rightAnchor="-1.0" AnchorPane.topAnchor="1.0">
         <menus>
           <Menu mnemonicParsing="false" text="File">
             <items>
@@ -34,21 +34,8 @@
           </Menu>
         </menus>
       </MenuBar>
-      <Label layoutX="156.0" layoutY="46.0" prefHeight="30.0" prefWidth="88.0" text="My Files">
-         <font>
-            <Font size="20.0" />
-         </font>
-         <tooltip>
-            <Tooltip text="Мои файлы" />
-         </tooltip>
-      </Label>
-      <Label layoutX="582.0" layoutY="46.0" text="My Cloud">
-         <font>
-            <Font size="20.0" />
-         </font>
-      </Label>
-      <ListView fx:id="filesClientList" layoutX="63.0" layoutY="146.0" prefHeight="486.0" prefWidth="330.0" />
-      <ListView fx:id="filesCloudList" layoutX="473.0" layoutY="146.0" prefHeight="486.0" prefWidth="330.0" />
+      <ListView fx:id="filesClientList" focusTraversable="false" layoutX="62.0" layoutY="146.0" prefHeight="486.0" prefWidth="330.0" style="-fx-border-color: #00BFFF;" stylesheets="@../style.css" />
+      <ListView fx:id="filesCloudList" cache="true" focusTraversable="false" layoutX="473.0" layoutY="146.0" prefHeight="486.0" prefWidth="330.0" style="-fx-border-color: #00BFFF;" stylesheets="@../style.css" />
        <fx:define>
            <Image fx:id="btnSendImage" url="@../images/sendToCloud.png" />
        </fx:define>
@@ -96,16 +83,45 @@
             <Tooltip text="Update list Files" />
          </tooltip>
       </Button>
-      <Label fx:id="clientPath" layoutX="62.0" layoutY="97.0">
+      <Label fx:id="clientPath" layoutX="62.0" layoutY="110.0" stylesheets="@../style.css" textFill="#1785a1">
          <font>
-            <Font size="18.0" />
+            <Font size="14.0" />
          </font>
       </Label>
-      <Label fx:id="serverPath" layoutX="472.0" layoutY="97.0">
+      <Label fx:id="serverPath" layoutX="472.0" layoutY="110.0" stylesheets="@../style.css" textFill="#1785a1">
          <font>
-            <Font size="18.0" />
+            <Font size="14.0" />
          </font>
       </Label>
+      <ImageView fitHeight="150.0" fitWidth="200.0" layoutX="529.0" layoutY="48.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../images/myCloud.png" />
+         </image>
+      </ImageView>
+      <Button layoutX="358.0" layoutY="156.0" mnemonicParsing="false" style="-fx-background-color: transparent;" />
+      <ImageView fitHeight="150.0" fitWidth="200.0" layoutX="109.0" layoutY="50.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../images/MyFiles.png" />
+         </image>
+      </ImageView>
+      <Button layoutX="348.0" layoutY="146.0" mnemonicParsing="false" onAction="#addDirOnClient"  onMouseEntered="#changeStyleOnMouseEnterBtnAddClient" onMouseExited="#changeStyleOnMouseExitBtnAddClient" style="-fx-background-color: transparent;">
+         <graphic>
+            <ImageView fx:id="addOnClient" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/create.png" />
+               </image>
+            </ImageView>
+         </graphic>
+      </Button>
+      <Button layoutX="759.0" layoutY="146.0" mnemonicParsing="false" onAction="#addDirOnCloud" style="-fx-background-color: transparent;">
+         <graphic>
+            <ImageView fx:id="addOnServer" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
+               <image>
+                  <Image url="@../images/create.png" />
+               </image>
+            </ImageView>
+         </graphic>
+      </Button>
 
    </children>
 </AnchorPane>

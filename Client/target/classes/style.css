@@ -1,0 +1,26 @@
+.bodybg{
+     -fx-background-image: url('background.jpg');
+     -fx-background-size: 100% 100%;    
+  }
+
+ .label{
+       -fx-font-size: 14pt;
+       -fx-font-family: "LucidaBrightDemiBold";
+       -fx-font-color:#17548a;
+ }
+
+.list-view .list-cell:odd {
+    -fx-background-color: #E0FFFF
+}
+
+
+.list-view .list-cell:even {
+    -fx-background-color: #F0FFFF
+}
+
+.list-view .list-cell:selected:odd,
+.list-view .list-cell:selected:even {
+    -fx-background-color: -fx-background;
+}
+
+
