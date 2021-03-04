@@ -3,19 +3,51 @@
      -fx-background-size: 100% 100%;    
   }
 
+.text-field {
+    -fx-background-color: -fx-text-box-border, -fx-background ;
+    -fx-background-insets: 0, 0 0 1 0 ;
+    -fx-background-radius: 0 ;
+}
+.text-field:focused {
+    -fx-background-color: -fx-focus-color, -fx-background ;
+}
+
+.c-button {
+      -fx-background-color:
+              #a6b5c9,
+              linear-gradient(#303842 0%, #3e5577 20%, #375074 100%),
+              linear-gradient(#768aa5 0%, #849cbb 5%, #5877a2 50%, #486a9a 51%, #4a6c9b 100%);
+          -fx-background-insets: 0 0 -1 0,0,1;
+          -fx-background-radius: 5,5,4;
+          -fx-padding: 7 30 7 30;
+          -fx-text-fill: #242d35;
+          -fx-font-family: "Helvetica";
+          -fx-font-size: 17px;
+          -fx-text-fill: white;
+
+}
+
+
  .label{
        -fx-font-size: 14pt;
        -fx-font-family: "LucidaBrightDemiBold";
        -fx-font-color:#17548a;
  }
 
+ .label_auth{
+         -fx-font-size: 16pt;
+        -fx-font-family: "Helvetica";
+        -fx-font-color:#112c8e;
+
+ }
+
 .list-view .list-cell:odd {
-    -fx-background-color: #E0FFFF
+    -fx-background-color: #e0ffff;
 }
 
 
 .list-view .list-cell:even {
-    -fx-background-color: #F0FFFF
+    -fx-background-color: #f0ffff;
 }
 
 .list-view .list-cell:selected:odd,

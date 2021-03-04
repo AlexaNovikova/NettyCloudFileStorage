@@ -113,7 +113,7 @@
             </ImageView>
          </graphic>
       </Button>
-      <Button layoutX="759.0" layoutY="146.0" mnemonicParsing="false" onAction="#addDirOnCloud" style="-fx-background-color: transparent;">
+      <Button layoutX="759.0" layoutY="146.0" mnemonicParsing="false" onMouseEntered="#changeStyleOnMouseEnterBtnAddCloud" onMouseExited="#changeStyleOnMouseExitBtnAddCloud" onAction="#addDirOnCloud" style="-fx-background-color: transparent;">
          <graphic>
             <ImageView fx:id="addOnServer" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
                <image>

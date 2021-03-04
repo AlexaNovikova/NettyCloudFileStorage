@@ -1,24 +1,19 @@
+import commands.FileInBuffer;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.Initializable;
 import javafx.scene.control.*;
-import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import javafx.scene.effect.Effect;
 import javafx.scene.effect.Glow;
 import javafx.scene.effect.Lighting;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.nio.file.*;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,8 +22,6 @@ import java.util.ResourceBundle;
 public class MyCloudController implements Initializable {
 
     public  Network network;
-    public TextField input;
-    public TextArea filesOnServer;
     public ListView <String>filesClientList;
     public ListView <String> filesCloudList;
     public ImageView sendBtn;
@@ -43,12 +36,6 @@ public class MyCloudController implements Initializable {
     private String selectedFileOnCloud;
     private static final String clientParent = "Client"+File.separator+"src"+File.separator+ "Files";
 
-
-    public void CommandToNetwork(ActionEvent actionEvent) throws IOException {
-        String textFromClient = input.getText();
-        network.sendCommand(textFromClient, this);
-        input.clear();
-    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -126,20 +113,74 @@ public class MyCloudController implements Initializable {
         if (place.equals("myFiles")) {
             if (option.get() == exit) {
                 selectAction.close();
-            } else if (option.get() == delete) {
+            }
+            else if (option.get() == delete) {
                 deleteFile(name);
             }
-//        else if (option.get()==move){
-//                      move(selectedFile);
-//        }
+        else if (option.get()==move){
+                      move(selectedFile);
+        }
         }
        if(place.equals("myCloud")){
             if (option.get() == exit) {
                 selectAction.close();
-            } else if (option.get() == delete) {
+            }
+            else if (option.get() == delete) {
                 network.sendCommand("/del "+ name,this);
             }
+            else if (option.get()==move){
+                TextInputDialog textInputDialog = new TextInputDialog("");
+                textInputDialog.setHeaderText("Укажите директорию, в которую вы хотите переместить выбранный файл.");
+                textInputDialog.showAndWait();
+                String nameDir = textInputDialog.getResult();
+                if (nameDir==null){
+                    return;
+                }
+                else{
+                    String fileOldPlaceName = selectedFileOnCloud.split(" ")[0];
+                    network.sendCommand("/move "+ fileOldPlaceName+ " "+ nameDir, this);
+                }
+            }
         }
+    }
+
+    private void move(String selectedFile) {
+        TextInputDialog textInputDialog = new TextInputDialog("");
+        textInputDialog.setHeaderText("Укажите директорию, в которую вы хотите переместить выбранный файл.");
+        textInputDialog.showAndWait();
+        String nameDir = textInputDialog.getResult();
+        if (nameDir==null){
+            return;
+        }
+        else {
+            nameDir.replaceAll("/", File.separator);
+            nameDir.replaceAll("\"", File.separator);
+            File changedDir = new File(nameDir);
+            if (changedDir.isDirectory() && changedDir.exists()) {
+                File newPlaceFile = new File(nameDir + File.separator + selectedFile.split(" ")[0]);
+                if (newPlaceFile.exists()&&newPlaceFile.isFile()){
+                    showError("Операция не может быть выполнена!","Файл с таким именем уже есть в выбранной директории!");
+                     return;
+                }
+                File oldFile = new File(network.getClientDir() + File.separator + selectedFile.split(" ")[0]);
+                if (oldFile.isFile()) {
+                    try{
+                        MoveFile moveFile = new MoveFile(oldFile,newPlaceFile);
+                        moveFile.execute();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    oldFile.delete();
+                    showText("Команда выполнена!", "Файл успешно перемещен в новую директорию!");
+                } else if (oldFile.isDirectory()) {
+                    showError("Команда не выполнена!", "Выбрана директория!");
+                }
+            }
+            else {
+                showError("Команда не выполнена!", "Не верно указан путь.");
+            }
+        }
+
     }
 
 
@@ -295,16 +336,24 @@ public class MyCloudController implements Initializable {
         textInputDialog.setHeaderText("Введите имя директории.");
         textInputDialog.showAndWait();
         String nameDir = textInputDialog.getResult();
-        File file = new File(network.getClientDir()+File.separator+nameDir);
-        if (file.exists()&& file.isDirectory()){
-            showError("Невозможно выполнить операцию!", "Директория с таким именем уже создана!");
-        }
-        else {
-            file.mkdir();
+        if (nameDir!=null) {
+            File file = new File(network.getClientDir() + File.separator + nameDir);
+            if (file.exists() && file.isDirectory()) {
+                showError("Невозможно выполнить операцию!", "Директория с таким именем уже создана!");
+            } else {
+                file.mkdir();
+                showText("Команда выполнена!", "Директория " + nameDir + " создана.");
+            }
         }
     }
 
     public void addDirOnCloud(ActionEvent actionEvent) {
+        TextInputDialog textInputDialog = new TextInputDialog("");
+        textInputDialog.setHeaderText("Введите имя директории.");
+        textInputDialog.showAndWait();
+        String nameDir = textInputDialog.getResult();
+        if (nameDir!=null){
+        network.sendCommand("/mkdir "+nameDir, this);}
     }
 
     public void changeStyleOnMouseEnterBtnAddClient(MouseEvent mouseEvent) {

@@ -22,7 +22,7 @@ public class Network {
     private String serverDir;
 
 
-    public static Network getInstance() throws IOException {
+    public static Network getInstance() {
         if (instance == null) {
             instance = new Network();
         }
@@ -94,11 +94,20 @@ public class Network {
                             sendFile(getFile.getFileName(),cloudController);
                             break;
                         }
+                        case END:{
+                            try {
+                                Thread.sleep(30);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            close();
+                            break;
+                        }
                     }
 
 
                 } catch (ClassNotFoundException | IOException e) {
-              //      e.printStackTrace();
+                   e.printStackTrace();
                 }
             }
         });
@@ -204,12 +213,6 @@ public class Network {
                          Command createNewDir = new Command().createNewDir(dirName);
                          os.writeObject(createNewDir);
                          File newDir = new File(clientDir + File.separator + dirName);
-                         if (!newDir.exists()) {
-                             newDir.mkdir();
-                         }
-                         if (newDir.exists() && !newDir.isDirectory()) {
-                             newDir.mkdir();
-                         }
                      }
                      break;
                  }
@@ -222,6 +225,19 @@ public class Network {
                          Command fileToDelete = new Command().deleteFile(fileName);
                          os.writeObject(fileToDelete);
                      }
+                     break;
+                 }
+
+                 case"/end":{
+                     Command endCommand = new Command().closeConnection();
+                     os.writeObject(endCommand);
+                     break;
+                 }
+                 case "/move":{
+                     String oldPlaceFile = data.split(" ")[0];
+                     String newPlaceFile = data.split(" ")[1];
+                     Command moveCommand = new Command().moveFile(oldPlaceFile, newPlaceFile);
+                     os.writeObject(moveCommand);
                      break;
                  }
 
@@ -258,11 +274,6 @@ public class Network {
             }
         }
             return fileNames;
-    }
-
-    public void write(Command command) throws IOException {
-        os.writeObject(command);
-        os.flush();
     }
 
     public void setClientDir(String dir) {
@@ -319,7 +330,7 @@ public class Network {
             cloudController.showText("Операция выполнена!","Файл успешно получен с сервера!");
         }
         catch (IOException | ClassNotFoundException e) {
-          //  e.printStackTrace();
+           e.printStackTrace();
         }
     }
 

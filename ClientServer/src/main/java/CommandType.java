@@ -7,12 +7,11 @@ public enum CommandType {
     OK,
     LS_OK,
     FILE,
-    EXIT,
     SEND,
     GET,
     DELETE,
-    UPDATE,
     MOVE,
+    END,
     CREATE,
     ERROR,
     UNKNOWN

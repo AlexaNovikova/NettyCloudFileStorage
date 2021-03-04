@@ -31,7 +31,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("Client connected!");
+        System.out.println("Client successfully passed authorization!");
         File file = new File(serverDir);
         if(!file.exists())
         {
@@ -46,6 +46,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("Client disconnect!");
         server.getClients().remove(ctx);
+        ctx.close();
     }
 
     @Override
@@ -180,7 +181,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 File file = new File(fullDirName);
                 if(!file.exists()||(file.exists()&&!file.isDirectory()))
                 {
-                    new File(fullDirName).mkdir();
+                    file.mkdir();
                     Command commandToClient = new Command().success(" Создана директория "+ dirName);
                     ctx.writeAndFlush(commandToClient);
                 }
@@ -210,6 +211,50 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 }
                 break;
             }
+            case MOVE:{
+                System.out.println("Получена команда Move");
+              MoveFileCommandData moveFileCommandData = (MoveFileCommandData) commandFromClient.getData();
+              String fileName = moveFileCommandData.getOldFile();
+              String oldFilePath = serverDir+File.separator+fileName;
+              String newPathForFileFromClient = moveFileCommandData.getNewPLaceFile();
+              newPathForFileFromClient.replaceAll("/",File.separator);
+              newPathForFileFromClient.replaceAll("\"", File.separator);
+              String exactNewPath = SERVER_DIR+File.separator+newPathForFileFromClient;
+
+              File oldFile = new File(oldFilePath);
+              if (oldFile.exists()&&!oldFile.isDirectory()){
+                  File newPath = new File (exactNewPath);
+                  if (newPath.exists()&&newPath.isDirectory()){
+                      File newFile = new File(exactNewPath+File.separator+fileName);
+                      if(!newFile.exists()) {
+                          MoveFile moveFile = new MoveFile(oldFile, newFile);
+                          try {
+                              moveFile.execute();
+                          } catch (IOException e) {
+                              e.printStackTrace();
+                          }
+                          oldFile.delete();
+                          Command commandToClient = new Command().success("Файл успешно перемещен в новую директорию!");
+                          ctx.writeAndFlush(commandToClient);
+                      }
+                      else if(newFile.exists()){
+                              Command commandToClient = new Command().error("Файл с таким именем уже существует в выбранной папке!");
+                              ctx.writeAndFlush(commandToClient);
+                      }
+                  }
+                  if(!newPath.exists()||!newPath.isDirectory()){
+                      Command commandToClient = new Command().error("Не верно указан путь!");
+                      ctx.writeAndFlush(commandToClient);
+                  }
+
+
+              }
+              else if(oldFile.isDirectory()){
+                  Command commandToClient = new Command().error("Выбрана директория!");
+                  ctx.writeAndFlush(commandToClient);
+              }
+                break;
+            }
 
             case ERROR:{
                 System.out.println("Неизвестная команда");
@@ -217,6 +262,13 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                String error = errorCommandData.getError();
                System.out.println(error+"\n");
                break;
+            }
+
+            case END:{
+          Command commandEndToClient = new Command().closeConnection();
+          ctx.writeAndFlush(commandEndToClient);
+          ctx.close();
+          break;
             }
 
             default:{

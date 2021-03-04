@@ -38,7 +38,6 @@ public class NettyServer {
 
                                     new ObjectEncoder(),
                                     new ObjectDecoder(ClassResolvers.cacheDisabled(null)),
-                                    new OutToClient(),
                                     new AuthHandler(NettyServer.this)
 
 

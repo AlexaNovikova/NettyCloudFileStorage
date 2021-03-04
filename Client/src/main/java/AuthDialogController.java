@@ -1,10 +1,14 @@
 
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 
+import java.net.URL;
+import java.util.ResourceBundle;
 
-    public class AuthDialogController {
+
+public class AuthDialogController implements Initializable {
 
         @FXML
         public TextField loginField;
@@ -23,7 +27,6 @@ import javafx.scene.control.TextField;
                 return;
             }
 
-      //      String authErrorMessage = network.sendAuthCommand(login, password);
             String authMessage ="/auth "+login+ " "+ password;
             network.sendCommand(authMessage,cloudApp.getMyCloudController());
 
@@ -35,8 +38,6 @@ import javafx.scene.control.TextField;
 
             if(network.authOk){
                 cloudApp.showFileMessenger();
-            } else {
-                cloudApp.showErrorMessage(" ","Ошибка авторизации");
             }
 
 
@@ -61,5 +62,13 @@ import javafx.scene.control.TextField;
         public void setCloudApp(CloudApp cloudApp) {
             this.cloudApp = cloudApp;
         }
+
+        // добавлено для тестирования! Временно
+
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        loginField.setText("sally");
+        passField.setText("user1");
     }
+}
 

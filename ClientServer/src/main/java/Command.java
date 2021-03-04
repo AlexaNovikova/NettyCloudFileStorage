@@ -97,6 +97,19 @@ public class Command implements Serializable {
         command.data=new DeleteFileCommandData(fileName);
         return command;
     }
+
+    public Command closeConnection (){
+        Command command = new Command();
+        command.type=CommandType.END;
+        return command;
+    }
+
+    public Command moveFile(String oldPlaceFile, String newPlaceFile){
+        Command command = new Command();
+        command.type= CommandType.MOVE;
+        command.data= new MoveFileCommandData(oldPlaceFile, newPlaceFile);
+        return  command;
+    }
     public CommandType getType() {
         return type;
     }

@@ -12,14 +12,20 @@ public class AuthHandler extends SimpleChannelInboundHandler<Command> {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-      //  ctx.writeAndFlush("Введите логин и пароль\n");
+        System.out.println("Client connected!");
+    }
+
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        System.out.println("Client disconnect!");
+        ctx.close();
+
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Command command) throws Exception {
-        Command commandFromClient = command;
         if (command.getType().equals(CommandType.AUTH)) {
-            AuthCommandData authCommand = (AuthCommandData) commandFromClient.getData();
+            AuthCommandData authCommand = (AuthCommandData) command.getData();
             String login = authCommand.getLogin();
             String password = authCommand.getPassword();
             authService = server.getAuthService();
@@ -29,9 +35,15 @@ public class AuthHandler extends SimpleChannelInboundHandler<Command> {
                 ctx.pipeline().addLast(new MyFileHandler(server, login));
                 ctx.pipeline().get(MyFileHandler.class).channelActive(ctx);
             } else {
-                Command errorAuth = new Command().unknownCommand("Укажите верно авторизационные данные в формате: /auth логин пароль.");
+                Command errorAuth = new Command().error("Неверно введены логин и пароль!");
                 ctx.writeAndFlush(errorAuth);
             }
+        }
+        if (command.getType().equals(CommandType.END)){
+            System.out.println("Получена команда END");
+            Command commandEndToClient = new Command().closeConnection();
+            ctx.writeAndFlush(commandEndToClient);
+            ctx.close();
         }
     }
 }
