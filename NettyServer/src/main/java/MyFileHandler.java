@@ -250,8 +250,18 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
 
               }
               else if(oldFile.isDirectory()){
-                  Command commandToClient = new Command().error("Выбрана директория!");
+                  File newDir = new File (exactNewPath+File.separator+fileName);
+                  newDir.mkdir();
+                  MoveDirectory moveDirectory = new MoveDirectory(oldFile,newDir);
+                  String result = moveDirectory.execute();
+                  if (result==null){
+                      Command commandToClient = new Command().success("Папка с файлами успешно перенесена в новую директорию!");
+                      ctx.writeAndFlush(commandToClient);
+                  }
+                  else {
+                  Command commandToClient = new Command().error(result);
                   ctx.writeAndFlush(commandToClient);
+                  }
               }
                 break;
             }

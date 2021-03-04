@@ -173,7 +173,17 @@ public class MyCloudController implements Initializable {
                     oldFile.delete();
                     showText("Команда выполнена!", "Файл успешно перемещен в новую директорию!");
                 } else if (oldFile.isDirectory()) {
-                    showError("Команда не выполнена!", "Выбрана директория!");
+
+                    File newDir= new File(nameDir + File.separator + selectedFile.split(" ")[0]);
+                    newDir.mkdir();
+                    MoveDirectory moveDirectory = new MoveDirectory(oldFile, newDir);
+                    String result = moveDirectory.execute();
+                    if (result==null) {
+                        showText("Команда выполнена!", "Выбранная папка с файлами успешно перемещена в новую директорию!");
+                    }
+                    else {
+                        showError("Операция не может быть выполнена!", result);
+                    }
                 }
             }
             else {
