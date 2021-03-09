@@ -91,8 +91,26 @@ public class Network {
                         }
                         case GET:{
                             GetFileCommandData getFile = (GetFileCommandData)message.getData();
-                            sendFile(getFile.getFileName(),cloudController);
+                            SendFileToCloud sendFileToCloud = new SendFileToCloud(clientDir+File.separator+getFile.getFileName(), this);
+                            System.out.println(clientDir+File.separator+getFile.getFileName());
+                            sendFileToCloud.sendFile(os);
+                            cloudController.showText("Операция выполнена!", "Файл отправлен на сервер!");
                             break;
+                        }
+                        case GET_DIR:{
+                            GetFileCommandData getFile = (GetFileCommandData)message.getData();
+                            String fileName = getFile.getFileName();
+                            File dir = new File(clientDir+File.separator+fileName);
+                            SendDirWithFilesFromClient dirToSend = new SendDirWithFilesFromClient(dir, this);
+                            dirToSend.sendDir(os);
+                            break;
+                        }
+                        case CREATE:{
+                            CreateDidCommandData createNewDir = (CreateDidCommandData)message.getData();
+                             String newDirName = clientDir+File.separator+createNewDir.getDirName();
+                             File newDir = new File(newDirName);
+                             newDir.mkdir();
+                             break;
                         }
                         case END:{
                             try {
@@ -190,13 +208,12 @@ public class Network {
                          if (!fileToServer.exists()) {
                              cloudController.showError("Команда не может быть выполнена!","Файл не существует!");
                          } else if (fileToServer.isDirectory()) {
-                             cloudController.showError("Команда не может быть выполнена!","Выбрана директория!");
-
+                             Command dirToSend = new Command().sendDirWithFiles(fileName, 1L);
+                             os.writeObject(dirToSend);
                          } else {
                              Long fileSize = fileToServer.length();
                              Command fileToSend = new Command().sendFile(fileName, fileSize);
                              os.writeObject(fileToSend);
-
                          }
                      }
                      break;
@@ -341,35 +358,40 @@ public class Network {
 
     public void close() {
         try{
-        is.close();
+                Thread.sleep(10);
+            is.close();
         os.close();
         socket.close();}
-        catch (IOException e){
+        catch (IOException | InterruptedException e){
            e.printStackTrace();
         }
     }
 
-    public void sendFile(String fileName, MyCloudController cloudController) {
-        File fileToServer = new File(clientDir + File.separator + fileName);
-        Long fileSize = fileToServer.length();
-        try (InputStream fis = new FileInputStream(fileToServer)) {
-            int ptr = 0;
-            while (fileSize > buffer.length) {
-                ptr = fis.read(buffer);
-                Command file = new Command().file(buffer, ptr);
-                fileSize -= ptr;
-                os.writeObject(file);
-                os.flush();
-            }
-            byte[] bufferLast = new byte[Math.toIntExact(fileSize)];
-            ptr = fis.read(bufferLast);
-            Command file = new Command().file(bufferLast, ptr);
-            os.writeObject(file);
-            os.flush();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        cloudController.showText("Операция выполнена!","Файл успешно отправлен на сервер!");
+//    public void sendFile(String fileName, MyCloudController cloudController) {
+//        File fileToServer = new File(clientDir + File.separator + fileName);
+//        Long fileSize = fileToServer.length();
+//        try (InputStream fis = new FileInputStream(fileToServer)) {
+//            int ptr = 0;
+//            while (fileSize > buffer.length) {
+//                ptr = fis.read(buffer);
+//                Command file = new Command().file(buffer, ptr);
+//                fileSize -= ptr;
+//                os.writeObject(file);
+//                os.flush();
+//            }
+//            byte[] bufferLast = new byte[Math.toIntExact(fileSize)];
+//            ptr = fis.read(bufferLast);
+//            Command file = new Command().file(bufferLast, ptr);
+//            os.writeObject(file);
+//            os.flush();
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        cloudController.showText("Операция выполнена!","Файл успешно отправлен на сервер!");
+//    }
+
+    public void sendDirWithFiles(String dirName, MyCloudController cloudController){
+
     }
 }
 

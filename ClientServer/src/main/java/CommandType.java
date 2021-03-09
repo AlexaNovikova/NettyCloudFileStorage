@@ -9,6 +9,8 @@ public enum CommandType {
     FILE,
     SEND,
     GET,
+    GET_DIR,
+    SEND_DIR,
     DELETE,
     MOVE,
     END,

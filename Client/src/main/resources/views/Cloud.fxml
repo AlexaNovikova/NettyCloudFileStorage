@@ -29,7 +29,7 @@
           </Menu>
           <Menu mnemonicParsing="false" text="Help">
             <items>
-              <MenuItem mnemonicParsing="false" text="About" />
+              <MenuItem mnemonicParsing="false" onAction="#showHelp" text="About" />
             </items>
           </Menu>
         </menus>
@@ -104,7 +104,7 @@
             <Image url="@../images/MyFiles.png" />
          </image>
       </ImageView>
-      <Button layoutX="348.0" layoutY="146.0" mnemonicParsing="false" onAction="#addDirOnClient"  onMouseEntered="#changeStyleOnMouseEnterBtnAddClient" onMouseExited="#changeStyleOnMouseExitBtnAddClient" style="-fx-background-color: transparent;">
+      <Button layoutX="348.0" layoutY="146.0" mnemonicParsing="false" onAction="#addDirOnClient" onMouseEntered="#changeStyleOnMouseEnterBtnAddClient" onMouseExited="#changeStyleOnMouseExitBtnAddClient" style="-fx-background-color: transparent;">
          <graphic>
             <ImageView fx:id="addOnClient" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
                <image>
@@ -113,7 +113,7 @@
             </ImageView>
          </graphic>
       </Button>
-      <Button layoutX="759.0" layoutY="146.0" mnemonicParsing="false" onMouseEntered="#changeStyleOnMouseEnterBtnAddCloud" onMouseExited="#changeStyleOnMouseExitBtnAddCloud" onAction="#addDirOnCloud" style="-fx-background-color: transparent;">
+      <Button layoutX="759.0" layoutY="146.0" mnemonicParsing="false" onAction="#addDirOnCloud" onMouseEntered="#changeStyleOnMouseEnterBtnAddCloud" onMouseExited="#changeStyleOnMouseExitBtnAddCloud" style="-fx-background-color: transparent;">
          <graphic>
             <ImageView fx:id="addOnServer" fitHeight="24.0" fitWidth="24.0" pickOnBounds="true" preserveRatio="true">
                <image>

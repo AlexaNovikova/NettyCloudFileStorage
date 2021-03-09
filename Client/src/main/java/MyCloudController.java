@@ -10,14 +10,12 @@ import javafx.scene.effect.Lighting;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Region;
 
 import java.io.*;
 import java.net.URL;
 import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.ResourceBundle;
+import java.util.*;
 
 public class MyCloudController implements Initializable {
 
@@ -242,9 +240,10 @@ public class MyCloudController implements Initializable {
                 }
             }
         else {
-            file = new File(network.getClientDir()+File.separator+ selectedFile.split(" ")[0]);
-            if (file.exists() && file.isDirectory()) {
-                network.setClientDir(selectedFile.split(" ")[0]);
+            String dirName = selectedFile.replace(" [DIR]", "").trim();
+            File newFile = new File(network.getClientDir()+File.separator+ dirName);
+            if (newFile.exists() && newFile.isDirectory()) {
+                network.setClientDir(dirName);
             }
         }
             clientPath.setText(network.getClientDir());
@@ -345,25 +344,37 @@ public class MyCloudController implements Initializable {
         TextInputDialog textInputDialog = new TextInputDialog("");
         textInputDialog.setHeaderText("Введите имя директории.");
         textInputDialog.showAndWait();
-        String nameDir = textInputDialog.getResult();
-        if (nameDir!=null) {
-            File file = new File(network.getClientDir() + File.separator + nameDir);
-            if (file.exists() && file.isDirectory()) {
-                showError("Невозможно выполнить операцию!", "Директория с таким именем уже создана!");
-            } else {
-                file.mkdir();
-                showText("Команда выполнена!", "Директория " + nameDir + " создана.");
+        if (textInputDialog.getResult()!=null){
+            String nameDir = textInputDialog.getResult();
+            if (!nameDir.trim().equals("")) {
+                File file = new File(network.getClientDir() + File.separator + nameDir);
+                if (file.exists() && file.isDirectory()) {
+                    showError("Невозможно выполнить операцию!", "Директория с таким именем уже создана!");
+                } else {
+                    file.mkdir();
+                    showText("Команда выполнена!", "Директория " + nameDir + " создана.");
+                }
+            }
+            else
+            {
+                showError("Невозможно выполнить операцию!", "Не указано имя новой директории!");
             }
         }
+
     }
 
     public void addDirOnCloud(ActionEvent actionEvent) {
         TextInputDialog textInputDialog = new TextInputDialog("");
         textInputDialog.setHeaderText("Введите имя директории.");
         textInputDialog.showAndWait();
-        String nameDir = textInputDialog.getResult();
-        if (nameDir!=null){
-        network.sendCommand("/mkdir "+nameDir, this);}
+        if (textInputDialog.getResult() != null) {
+            String nameDir = textInputDialog.getResult();
+            if (!nameDir.trim().equals("")) {
+                network.sendCommand("/mkdir " + nameDir, this);
+            } else {
+                showError("Невозможно выполнить операцию!", "Не указано имя новой директории!");
+            }
+        }
     }
 
     public void changeStyleOnMouseEnterBtnAddClient(MouseEvent mouseEvent) {
@@ -380,5 +391,20 @@ public class MyCloudController implements Initializable {
 
     public void changeStyleOnMouseExitBtnAddCloud(MouseEvent mouseEvent) {
         addOnServer.setEffect(null);
+    }
+
+    public void showHelp(ActionEvent actionEvent) throws FileNotFoundException {
+       Alert info = new Alert(Alert.AlertType.INFORMATION);
+       info.setHeaderText("О программе.");
+        info.setResizable(true);
+        info.getDialogPane().setMinWidth(1000);
+       Scanner scanner = new Scanner(new File("about.txt"));
+       StringBuilder sb = new StringBuilder();
+       while(scanner.hasNext()){
+           sb.append(scanner.next()).append(" ");
+       }
+       info.setContentText(sb.toString());
+       scanner.close();
+        info.show();
     }
 }

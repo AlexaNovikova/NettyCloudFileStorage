@@ -20,7 +20,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
     private byte[] buffer = new byte[8189];
     private String fileName;
     private Long fileSize;
-    private File newFile;
+//    private File newFile;
 
     public MyFileHandler(NettyServer server, String username) {
         this.server = server;
@@ -101,29 +101,33 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 System.out.println("Получена команда Get");
                 GetFileCommandData getFileCommandData = (GetFileCommandData) commandFromClient.getData();
                 String fileName = getFileCommandData.getFileName();
-                File fileToSend = new File(serverDir + "/"+fileName);
+                File fileToSend = new File(serverDir +File.separator+fileName);
                 if (fileToSend.exists()&&fileToSend.isFile()) {
                     Long fileSize = fileToSend.length();
                     Command commandFile = new Command().sendFile(fileName, fileSize);
                     ctx.writeAndFlush(commandFile);
-                    try (InputStream fis = new FileInputStream(fileToSend)) {
-                        int ptr = 0;
-                        while(fileSize>buffer.length){
-                            ptr=fis.read(buffer);
-                            Command fileToClient = new Command().file(buffer,ptr);
-                            fileSize-=ptr;
-                            ctx.writeAndFlush(fileToClient);
-                        }
-                        byte[] bufferLast = new byte[Math.toIntExact(fileSize)];
-                        ptr=fis.read(bufferLast);
-                        Command fileToClient = new Command().file(bufferLast,ptr);
-                        ctx.writeAndFlush(fileToClient);
-                        }
+//                    try (InputStream fis = new FileInputStream(fileToSend)) {
+//                        int ptr = 0;
+//                        while(fileSize>buffer.length){
+//                            ptr=fis.read(buffer);
+//                            Command fileToClient = new Command().file(buffer,ptr);
+//                            fileSize-=ptr;
+//                            ctx.writeAndFlush(fileToClient);
+//                        }
+//                        byte[] bufferLast = new byte[Math.toIntExact(fileSize)];
+//                        ptr=fis.read(bufferLast);
+//                        Command fileToClient = new Command().file(bufferLast,ptr);
+//                        ctx.writeAndFlush(fileToClient);
+//                        }
+                    SendFileFromCloudToClient sendFileFromCloud = new SendFileFromCloudToClient(fileToSend);
+                    sendFileFromCloud.createCommandAndSend(ctx);
                 }
 
                 else if(fileToSend.isDirectory()){
-                    Command commandToClient = new Command().error("Выбрана директория! Выберите файл.");
-                    ctx.writeAndFlush(commandToClient);
+                    SendDirWithFilesFromCloud sendDirWithFilesFromCloud= new SendDirWithFilesFromCloud(fileToSend,this);
+                    sendDirWithFilesFromCloud.execute(ctx);
+//                    Command commandToClient = new Command().error("Выбрана директория! Выберите файл.");
+//                    ctx.writeAndFlush(commandToClient);
                 }
                 else {
                     Command commandToClient = new Command().error("Файла не существует!");
@@ -137,7 +141,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 SendFileCommandData sendFileCommandData = (SendFileCommandData) commandFromClient.getData();
                 fileName = sendFileCommandData.getFileName();
                 fileSize = sendFileCommandData.getFileSize();
-                newFile = new File(serverDir + "/" + fileName);
+                 File newFile = new File(serverDir + File.separator + fileName);
                 if (newFile.exists()) {
                     Command commandToClient = new Command().error("Файл уже есть на сервере! Пересоздать файл - /renew");
                     ctx.writeAndFlush(commandToClient);
@@ -148,24 +152,42 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 break;
             }
 
+            case SEND_DIR:{
+                System.out.println("Получена команда Send_dir");
+                SendFileCommandData sendFileCommandData = (SendFileCommandData) commandFromClient.getData();
+                fileName = sendFileCommandData.getFileName();
+                fileSize = sendFileCommandData.getFileSize();
+                File newDir= new File(serverDir + File.separator + fileName);
+                if (newDir.exists()&&newDir.isDirectory()) {
+                    Command commandToClient = new Command().error("Папка с таким именем уже есть на сервере!");
+                    ctx.writeAndFlush(commandToClient);
+                } else {
+                    newDir.mkdir();
+                    Command commandToClient = new Command().getDirWithFiles(fileName);
+                    ctx.writeAndFlush(commandToClient);
+                }
+                break;
+            }
+
             case FILE: {
+                FileInBuffer file = (FileInBuffer) commandFromClient.getData();
+                String fileName = file.getFileName();
+                File newFile = new File(serverDir + File.separator + fileName);
                 int ptr = 0;
-               // File newFile = new File(serverDir + "/" + fileName);
                 try {
                     try (FileOutputStream fos = new FileOutputStream(newFile, true)) {
-                        if (fileSize > buffer.length) {
-                            FileInBuffer file = (FileInBuffer) commandFromClient.getData();
+//                        if (fileSize > buffer.length) {
                             ptr = file.getPtr();
                             buffer = file.getBuffer();
                             fos.write(buffer, 0, ptr);
 
-                        } else {
-                            byte[] bufferLast;
-                            FileInBuffer file = (FileInBuffer) commandFromClient.getData();
-                            ptr = file.getPtr();
-                            bufferLast = file.getBuffer();
-                            fos.write(bufferLast, 0, ptr);
-                        }
+//                        } else {
+//                            byte[] bufferLast;
+//                            FileInBuffer file = (FileInBuffer) commandFromClient.getData();
+//                            ptr = file.getPtr();
+//                            bufferLast = file.getBuffer();
+//                            fos.write(bufferLast, 0, ptr);
+//                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -189,6 +211,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                     Command commandToClient = new Command().error("Директория с таким именем уже существует на сервере!");
                     ctx.writeAndFlush(commandToClient);
                 }
+                break;
             }
 
             case DELETE:{
@@ -217,10 +240,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
               String fileName = moveFileCommandData.getOldFile();
               String oldFilePath = serverDir+File.separator+fileName;
               String newPathForFileFromClient = moveFileCommandData.getNewPLaceFile();
-              newPathForFileFromClient.replaceAll("/",File.separator);
-              newPathForFileFromClient.replaceAll("\"", File.separator);
               String exactNewPath = SERVER_DIR+File.separator+newPathForFileFromClient;
-
               File oldFile = new File(oldFilePath);
               if (oldFile.exists()&&!oldFile.isDirectory()){
                   File newPath = new File (exactNewPath);
@@ -243,7 +263,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                       }
                   }
                   if(!newPath.exists()||!newPath.isDirectory()){
-                      Command commandToClient = new Command().error("Не верно указан путь!");
+                      Command commandToClient = new Command().error("Неверно указан путь!");
                       ctx.writeAndFlush(commandToClient);
                   }
 
@@ -276,6 +296,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
 
             case END:{
           Command commandEndToClient = new Command().closeConnection();
+                System.out.println("Получена команда END.");
           ctx.writeAndFlush(commandEndToClient);
           ctx.close();
           break;
@@ -288,6 +309,50 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
         }
 
 
+    }
+
+//        public void getFile(SendFileCommandData sendFileCommandData, ChannelHandlerContext ctx) throws IOException {
+//            int ptr = 0;
+//            Long fileSize = sendFileCommandData.getFileSize();
+//            String fileName = sendFileCommandData.getFileName();
+//            File newFile = new File(serverDir +File.separator+ fileName);
+//            try {
+//                try (FileOutputStream fos = new FileOutputStream(newFile, false)) {
+//                    if (fileSize > buffer.length) {
+//                        while (fileSize > ptr) {
+//                            Command message = channelRead0();
+//                            FileInBuffer fileFromServer = (FileInBuffer) message.getData();
+//                            ptr = fileFromServer.getPtr();
+//                            buffer = fileFromServer.getBuffer();
+//                            fos.write(buffer, 0, ptr);
+//                            fileSize -= ptr;
+//                        }
+//                    }
+//                    byte[] bufferLast;
+//                    while (fileSize > 0) {
+//                        Command message = readObject();
+//                        FileInBuffer fileFromServer = (FileInBuffer) message.getData();
+//                        ptr = fileFromServer.getPtr();
+//                        bufferLast = fileFromServer.getBuffer();
+//                        fos.write(bufferLast, 0, ptr);
+//                        fileSize -= ptr;
+//                    }
+//                }
+//                cloudController.showText("Операция выполнена!","Файл успешно получен с сервера!");
+//            }
+//            catch (IOException | ClassNotFoundException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//    }
+
+
+    public String getServerDir() {
+        return serverDir;
+    }
+
+    public String getUsername() {
+        return username;
     }
 
     public ArrayList<String > createListFiles(){
