@@ -46,7 +46,10 @@ public class CloudApp extends Application {
         myCloudController = mainLoader.getController();
         myCloudController.setNetwork(network);
         network.start(myCloudController);
-        primaryStage.setOnCloseRequest(event -> {network.close();});
+        primaryStage.setOnCloseRequest(event -> {
+            network.sendCommand("/end ", myCloudController);
+            }
+            );
     }
 
 
@@ -64,6 +67,9 @@ public class CloudApp extends Application {
         AuthDialogController authDialogController = authLoader.getController();
         authDialogController.setNetwork(network);
         authDialogController.setCloudApp(this);
+        authStage.setOnCloseRequest(event -> {
+            network.sendCommand("/end ", myCloudController);
+        });
 
     }
 
@@ -72,6 +78,8 @@ public class CloudApp extends Application {
         primaryStage.show();
         primaryStage.setTitle(network.getClientNick());
         network.sendCommand("/ls",myCloudController);
+        myCloudController.clientPath.setText(network.getClientDir());
+        myCloudController.serverPath.setText(network.getServerDir());
     }
 
     public void showErrorMessage(String message, String errorMessage) {

@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.util.logging.Level;
 
 public class BaseAuthService {
 
@@ -64,7 +65,7 @@ public void authStatement () throws SQLException {
             authPrepStm.setString(2,password);
             ResultSet rez = authPrepStm.executeQuery();
             if (rez.next()) {
-                System.out.println(login+ " прошел авторизацию.");
+                NettyServer.logger.log(Level.FINE,login+ " прошел авторизацию.");
 
                 return login;
             }
@@ -73,15 +74,17 @@ public void authStatement () throws SQLException {
                 return null;
             }
 
-        } catch (SQLException throwables) {
+        } catch (SQLException e) {
 
-        throwables.printStackTrace();
+            NettyServer.logger.log(Level.SEVERE,"DataBase error");
+        e.printStackTrace();
         }
         finally {
 
             try {
                 authPrepStm.close();
             } catch (SQLException throwables) {
+                NettyServer.logger.log(Level.SEVERE,"DataBase error");
                 throwables.printStackTrace();
             }
         }

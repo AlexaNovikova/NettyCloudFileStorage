@@ -42,10 +42,10 @@ public class Command implements Serializable {
         return command;
     }
 
-    public Command sendListFiles(ArrayList<String> filesList){
+    public Command sendListFiles(ArrayList<String> filesList, String serverDir){
         Command command = new Command();
         command.type=CommandType.LS_OK;
-        command.data=new SendListFilesCommandData(filesList);
+        command.data=new SendListFilesCommandData(filesList, serverDir);
         return command;
     }
 
@@ -56,18 +56,36 @@ public class Command implements Serializable {
         return command;
     }
 
-    public Command sendFile (String fileName, Long fileSize){
+    public Command sendFile (String fileName, Long fileSize, boolean fromDir){
         Command command = new Command();
         command.type = CommandType.SEND;
-        command.data = new SendFileCommandData(fileName, fileSize);
+        command.data = new SendFileCommandData(fileName, fileSize, fromDir);
         return  command;
     }
 
+    public Command sendDirWithFiles (String fileName, Long fileSize){
+        Command command = new Command();
+        command.type = CommandType.SEND_DIR;
+        command.data=new SendFileCommandData(fileName, fileSize, true);
+        return command;
+    }
 
+    public Command getDirWithFiles (String fileName){
+        Command command = new Command();
+        command.type = CommandType.GET_DIR;
+        command.data=new GetFileCommandData(fileName);
+        return  command;
+    }
     public Command file (byte[] buffer, int ptr){
         Command command= new Command();
         command.type=CommandType.FILE;
         command.data=new FileInBuffer(buffer,ptr);
+        return command;
+    }
+    public Command fileToServer (String filename, byte[] buffer, int ptr){
+        Command command= new Command();
+        command.type=CommandType.FILE;
+        command.data=new FileInBuffer(buffer,ptr, filename);
         return command;
     }
     public Command error (String error){
@@ -91,6 +109,25 @@ public class Command implements Serializable {
         return command;
     }
 
+    public Command deleteFile(String fileName){
+        Command command= new Command();
+        command.type=CommandType.DELETE;
+        command.data=new DeleteFileCommandData(fileName);
+        return command;
+    }
+
+    public Command closeConnection (){
+        Command command = new Command();
+        command.type=CommandType.END;
+        return command;
+    }
+
+    public Command moveFile(String oldPlaceFile, String newPlaceFile){
+        Command command = new Command();
+        command.type= CommandType.MOVE;
+        command.data= new MoveFileCommandData(oldPlaceFile, newPlaceFile);
+        return  command;
+    }
     public CommandType getType() {
         return type;
     }
