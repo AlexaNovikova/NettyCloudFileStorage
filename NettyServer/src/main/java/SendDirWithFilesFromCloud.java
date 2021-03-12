@@ -26,11 +26,11 @@ public class SendDirWithFilesFromCloud {
                             File fileFromServer = new File(dirFromCloud + File.separator + f.getName());
                             if (fileFromServer.isFile()) {
                                 Long fileSize =fileFromServer.length();
-                                Command commandFile = new Command().sendFile(dirPath+File.separator+ fileFromServer.getName(), fileSize);
+                                Command commandFile = new Command().sendFile(dirPath+File.separator+ fileFromServer.getName(), fileSize,false);
                                 ctx.writeAndFlush(commandFile);
                                 SendFileFromCloudToClient sendFileFromCloudToClient = new SendFileFromCloudToClient(fileFromServer);
                                 sendFileFromCloudToClient.createCommandAndSend(ctx);
-//                                fileFromServer.delete();
+
                            }
                             if (fileFromServer.isDirectory()) {
 
@@ -43,7 +43,7 @@ public class SendDirWithFilesFromCloud {
                     }
                 }
                 }
-//            dirFromCloud.delete();
+
         }
     }
 

@@ -56,17 +56,17 @@ public class Command implements Serializable {
         return command;
     }
 
-    public Command sendFile (String fileName, Long fileSize){
+    public Command sendFile (String fileName, Long fileSize, boolean fromDir){
         Command command = new Command();
         command.type = CommandType.SEND;
-        command.data = new SendFileCommandData(fileName, fileSize);
+        command.data = new SendFileCommandData(fileName, fileSize, fromDir);
         return  command;
     }
 
     public Command sendDirWithFiles (String fileName, Long fileSize){
         Command command = new Command();
         command.type = CommandType.SEND_DIR;
-        command.data=new SendFileCommandData(fileName, fileSize);
+        command.data=new SendFileCommandData(fileName, fileSize, true);
         return command;
     }
 

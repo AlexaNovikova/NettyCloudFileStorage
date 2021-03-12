@@ -2,14 +2,11 @@
 import commands.*;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Optional;
+import java.util.logging.Level;
 
 
 public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
@@ -20,7 +17,6 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
     private byte[] buffer = new byte[8189];
     private String fileName;
     private Long fileSize;
-//    private File newFile;
 
     public MyFileHandler(NettyServer server, String username) {
         this.server = server;
@@ -31,7 +27,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("Client successfully passed authorization!");
+        NettyServer.logger.log(Level.INFO,"Client successfully passed authorization!");
         File file = new File(serverDir);
         if(!file.exists())
         {
@@ -44,13 +40,14 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("Client disconnect!");
+        NettyServer.logger.log(Level.INFO,"Client disconnect!");
         server.getClients().remove(ctx);
         ctx.close();
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        NettyServer.logger.log(Level.SEVERE,"Channel throws exception");
         cause.printStackTrace();
     }
 
@@ -63,7 +60,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
             case CD:{
                 ChangeDirectoryCommandData changeDirectoryCommandData = (ChangeDirectoryCommandData)commandFromClient.getData();
                 String directory = changeDirectoryCommandData.getPath();
-                System.out.println("Получена команда CD "+ directory);
+                NettyServer.logger.log(Level.INFO,"Получена команда CD "+ directory);
                 File file = new File(serverDir);
                 if (directory.trim().equals("...")) {
                     if (serverDir.equals(SERVER_DIR+File.separator+username)) {
@@ -88,8 +85,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
             }
 
             case LS:{
-                System.out.println("Получена команда LS");
-                ListFilesCommandData listFilesCommandData = (ListFilesCommandData)commandFromClient.getData();
+                NettyServer.logger.log(Level.INFO,"Получена команда LS ");
                 ArrayList<String>filesList = createListFiles();
                 String serverDirToClient = serverDir.replace(SERVER_DIR+File.separator, "");
                 Command commandToClient = new Command().sendListFiles(filesList,serverDirToClient);
@@ -98,36 +94,25 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
             }
 
             case GET: {
-                System.out.println("Получена команда Get");
+                NettyServer.logger.log(Level.INFO,"Получена команда GET ");
                 GetFileCommandData getFileCommandData = (GetFileCommandData) commandFromClient.getData();
                 String fileName = getFileCommandData.getFileName();
                 File fileToSend = new File(serverDir +File.separator+fileName);
                 if (fileToSend.exists()&&fileToSend.isFile()) {
                     Long fileSize = fileToSend.length();
-                    Command commandFile = new Command().sendFile(fileName, fileSize);
+                    Command commandFile = new Command().sendFile(fileName, fileSize,false);
                     ctx.writeAndFlush(commandFile);
-//                    try (InputStream fis = new FileInputStream(fileToSend)) {
-//                        int ptr = 0;
-//                        while(fileSize>buffer.length){
-//                            ptr=fis.read(buffer);
-//                            Command fileToClient = new Command().file(buffer,ptr);
-//                            fileSize-=ptr;
-//                            ctx.writeAndFlush(fileToClient);
-//                        }
-//                        byte[] bufferLast = new byte[Math.toIntExact(fileSize)];
-//                        ptr=fis.read(bufferLast);
-//                        Command fileToClient = new Command().file(bufferLast,ptr);
-//                        ctx.writeAndFlush(fileToClient);
-//                        }
                     SendFileFromCloudToClient sendFileFromCloud = new SendFileFromCloudToClient(fileToSend);
                     sendFileFromCloud.createCommandAndSend(ctx);
+                    Command result = new Command().success("Файл успешно отправлен клиенту!");
+                    ctx.writeAndFlush(result);
                 }
 
                 else if(fileToSend.isDirectory()){
                     SendDirWithFilesFromCloud sendDirWithFilesFromCloud= new SendDirWithFilesFromCloud(fileToSend,this);
                     sendDirWithFilesFromCloud.execute(ctx);
-//                    Command commandToClient = new Command().error("Выбрана директория! Выберите файл.");
-//                    ctx.writeAndFlush(commandToClient);
+                    Command result = new Command().success("Директория с файлами успешно отправлена клиенту!");
+                    ctx.writeAndFlush(result);
                 }
                 else {
                     Command commandToClient = new Command().error("Файла не существует!");
@@ -137,13 +122,13 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
             }
 
             case SEND: {
-                System.out.println("Получена команда Send");
+                NettyServer.logger.log(Level.INFO,"Получена команда SEND");
                 SendFileCommandData sendFileCommandData = (SendFileCommandData) commandFromClient.getData();
                 fileName = sendFileCommandData.getFileName();
                 fileSize = sendFileCommandData.getFileSize();
                  File newFile = new File(serverDir + File.separator + fileName);
                 if (newFile.exists()) {
-                    Command commandToClient = new Command().error("Файл уже есть на сервере! Пересоздать файл - /renew");
+                    Command commandToClient = new Command().error("Файл с таким именем уже есть на сервере!");
                     ctx.writeAndFlush(commandToClient);
                 } else {
                     Command commandToClient = new Command().getFileFromServer(fileName);
@@ -153,7 +138,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
             }
 
             case SEND_DIR:{
-                System.out.println("Получена команда Send_dir");
+                NettyServer.logger.log(Level.INFO,"Получена команда SEND_DIR");
                 SendFileCommandData sendFileCommandData = (SendFileCommandData) commandFromClient.getData();
                 fileName = sendFileCommandData.getFileName();
                 fileSize = sendFileCommandData.getFileSize();
@@ -176,18 +161,11 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 int ptr = 0;
                 try {
                     try (FileOutputStream fos = new FileOutputStream(newFile, true)) {
-//                        if (fileSize > buffer.length) {
+
                             ptr = file.getPtr();
                             buffer = file.getBuffer();
                             fos.write(buffer, 0, ptr);
 
-//                        } else {
-//                            byte[] bufferLast;
-//                            FileInBuffer file = (FileInBuffer) commandFromClient.getData();
-//                            ptr = file.getPtr();
-//                            bufferLast = file.getBuffer();
-//                            fos.write(bufferLast, 0, ptr);
-//                        }
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -196,7 +174,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
             }
 
             case CREATE:{
-                System.out.println("Получена команда Create");
+                NettyServer.logger.log(Level.INFO,"Получена команда CREATE");
                 CreateDidCommandData createDidCommandData = (CreateDidCommandData) commandFromClient.getData();
                 String dirName = createDidCommandData.getDirName();
                 String fullDirName = serverDir+File.separator+dirName;
@@ -215,7 +193,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
             }
 
             case DELETE:{
-                System.out.println("Получена команда Delete");
+                NettyServer.logger.log(Level.INFO,"Получена команда DELETE");
                 DeleteFileCommandData deleteFileCommandData = (DeleteFileCommandData) commandFromClient.getData();
                 String fileName = deleteFileCommandData.getFileName();
                 File fileToDelete = new File(serverDir+File.separator+fileName);
@@ -235,7 +213,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                 break;
             }
             case MOVE:{
-                System.out.println("Получена команда Move");
+                NettyServer.logger.log(Level.INFO,"Получена команда MOVE");
               MoveFileCommandData moveFileCommandData = (MoveFileCommandData) commandFromClient.getData();
               String fileName = moveFileCommandData.getOldFile();
               String oldFilePath = serverDir+File.separator+fileName;
@@ -274,36 +252,36 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
                   newDir.mkdir();
                   MoveDirectory moveDirectory = new MoveDirectory(oldFile,newDir);
                   String result = moveDirectory.execute();
+                  Command commandToClient;
                   if (result==null){
-                      Command commandToClient = new Command().success("Папка с файлами успешно перенесена в новую директорию!");
-                      ctx.writeAndFlush(commandToClient);
+                      commandToClient = new Command().success("Папка с файлами успешно перенесена в новую директорию!");
                   }
                   else {
-                  Command commandToClient = new Command().error(result);
-                  ctx.writeAndFlush(commandToClient);
+                      commandToClient = new Command().error(result);
                   }
+                  ctx.writeAndFlush(commandToClient);
               }
                 break;
             }
 
             case ERROR:{
-                System.out.println("Неизвестная команда");
+
                ErrorCommandData errorCommandData = (ErrorCommandData) commandFromClient.getData();
                String error = errorCommandData.getError();
-               System.out.println(error+"\n");
+                NettyServer.logger.log(Level.WARNING,"Ошибка "+ error);
                break;
             }
 
             case END:{
           Command commandEndToClient = new Command().closeConnection();
-                System.out.println("Получена команда END.");
+          NettyServer.logger.log(Level.INFO,"Получена неизвестная команда END");
           ctx.writeAndFlush(commandEndToClient);
           ctx.close();
           break;
             }
 
             default:{
-                System.out.println("Получена неизвестная команда!");
+                NettyServer.logger.log(Level.WARNING,"Получена неизвестная команда");
                 break;
             }
         }
@@ -311,49 +289,12 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
 
     }
 
-//        public void getFile(SendFileCommandData sendFileCommandData, ChannelHandlerContext ctx) throws IOException {
-//            int ptr = 0;
-//            Long fileSize = sendFileCommandData.getFileSize();
-//            String fileName = sendFileCommandData.getFileName();
-//            File newFile = new File(serverDir +File.separator+ fileName);
-//            try {
-//                try (FileOutputStream fos = new FileOutputStream(newFile, false)) {
-//                    if (fileSize > buffer.length) {
-//                        while (fileSize > ptr) {
-//                            Command message = channelRead0();
-//                            FileInBuffer fileFromServer = (FileInBuffer) message.getData();
-//                            ptr = fileFromServer.getPtr();
-//                            buffer = fileFromServer.getBuffer();
-//                            fos.write(buffer, 0, ptr);
-//                            fileSize -= ptr;
-//                        }
-//                    }
-//                    byte[] bufferLast;
-//                    while (fileSize > 0) {
-//                        Command message = readObject();
-//                        FileInBuffer fileFromServer = (FileInBuffer) message.getData();
-//                        ptr = fileFromServer.getPtr();
-//                        bufferLast = fileFromServer.getBuffer();
-//                        fos.write(bufferLast, 0, ptr);
-//                        fileSize -= ptr;
-//                    }
-//                }
-//                cloudController.showText("Операция выполнена!","Файл успешно получен с сервера!");
-//            }
-//            catch (IOException | ClassNotFoundException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
 
 
     public String getServerDir() {
         return serverDir;
     }
 
-    public String getUsername() {
-        return username;
-    }
 
     public ArrayList<String > createListFiles(){
         File dir = new File(serverDir);

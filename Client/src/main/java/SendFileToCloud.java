@@ -7,10 +7,13 @@ public class SendFileToCloud {
     byte[] buffer ;
     Network network;
 
+
     public SendFileToCloud(String fileToServer, Network network) {
       this.fileToSend=fileToServer;
       this.network=network;
       buffer=new byte[8189];
+
+
     }
 
     public void sendFile(ObjectEncoderOutputStream os) throws IOException {
@@ -21,19 +24,23 @@ public class SendFileToCloud {
             int ptr;
             while (fileSize > buffer.length) {
                 ptr = fis.read(buffer);
-                Command file = new Command().fileToServer(fileNameToServer,buffer, ptr);
+                Command file = new Command().fileToServer(fileNameToServer, buffer, ptr);
                 fileSize -= ptr;
                 os.writeObject(file);
                 os.flush();
             }
             byte[] bufferLast = new byte[Math.toIntExact(fileSize)];
             ptr = fis.read(bufferLast);
-            Command file = new Command().fileToServer(fileNameToServer,bufferLast, ptr);
+            Command file = new Command().fileToServer(fileNameToServer, bufferLast, ptr);
             os.writeObject(file);
             os.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }
-      os.flush();
+
+        Command update = new Command().listFilesCommand();
+        os.writeObject(update);
+        os.flush();
+
     }
 }

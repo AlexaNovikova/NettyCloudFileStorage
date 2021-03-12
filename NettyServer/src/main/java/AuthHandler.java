@@ -1,10 +1,15 @@
 import commands.*;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
 
 public class AuthHandler extends SimpleChannelInboundHandler<Command> {
     private NettyServer server;
     private BaseAuthService authService;
+    private MyFileHandler fileHandler;
 
     public AuthHandler(NettyServer server) {
         this.server = server;
@@ -12,12 +17,12 @@ public class AuthHandler extends SimpleChannelInboundHandler<Command> {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("Client connected!");
+        NettyServer.logger.log(Level.INFO,"Сервер запущен");
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) throws Exception {
-        System.out.println("Client disconnect!");
+        NettyServer.logger.log(Level.INFO,"Клиент отключился");
         ctx.close();
 
     }
@@ -32,7 +37,8 @@ public class AuthHandler extends SimpleChannelInboundHandler<Command> {
             String successAuth = authService.checkAuth(login, password);
             if (successAuth != null) {
                 ctx.pipeline().remove(AuthHandler.class);
-                ctx.pipeline().addLast(new MyFileHandler(server, login));
+                fileHandler=new MyFileHandler(server,login);
+                ctx.pipeline().addLast(fileHandler);
                 ctx.pipeline().get(MyFileHandler.class).channelActive(ctx);
             } else {
                 Command errorAuth = new Command().error("Неверно введены логин и пароль!");
@@ -40,11 +46,15 @@ public class AuthHandler extends SimpleChannelInboundHandler<Command> {
             }
         }
         if (command.getType().equals(CommandType.END)){
-            System.out.println("Получена команда END");
+            NettyServer.logger.log(Level.INFO,"Получена команда END");
             Command commandEndToClient = new Command().closeConnection();
             ctx.writeAndFlush(commandEndToClient);
             ctx.close();
         }
+    }
+
+    public MyFileHandler getFileHandler() {
+        return fileHandler;
     }
 }
 

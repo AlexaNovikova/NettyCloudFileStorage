@@ -16,12 +16,13 @@ import java.io.*;
 import java.net.URL;
 import java.nio.file.*;
 import java.util.*;
+import java.util.stream.Stream;
 
 public class MyCloudController implements Initializable {
 
-    public  Network network;
-    public ListView <String>filesClientList;
-    public ListView <String> filesCloudList;
+    public Network network;
+    public ListView<String> filesClientList;
+    public ListView<String> filesCloudList;
     public ImageView sendBtn;
     public ImageView getBtn;
     public ImageView updateBtn;
@@ -32,7 +33,7 @@ public class MyCloudController implements Initializable {
     public ImageView addOnServer;
     private String selectedFile;
     private String selectedFileOnCloud;
-    private static final String clientParent = "Client"+File.separator+"src"+File.separator+ "Files";
+    private static final String clientParent = "Client" + File.separator + "src" + File.separator + "Files";
 
 
     @Override
@@ -43,23 +44,23 @@ public class MyCloudController implements Initializable {
             ListCell<String> cell = new ListCell<>();
             cell.textProperty().bind(cell.itemProperty());
             cell.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
-               filesClientList.requestFocus();
-                if (! cell.isEmpty()) {
+                filesClientList.requestFocus();
+                if (!cell.isEmpty()) {
                     int index = cell.getIndex();
-                        selectionModel.select(index);
-                        selectedFile = cell.getItem();
-                    if (event.getClickCount()==2){
+                    selectionModel.select(index);
+                    selectedFile = cell.getItem();
+                    if (event.getClickCount() == 2) {
                         changeDir(selectedFile);
-                        selectedFile=null;
+                        selectedFile = null;
                     }
-                    if(event.getButton()== MouseButton.SECONDARY){
+                    if (event.getButton() == MouseButton.SECONDARY) {
                         showSelectAction(selectedFile, "myFiles");
                     }
                     event.consume();
                 }
             });
 
-            return cell ;
+            return cell;
         });
 
         filesCloudList.setItems(FXCollections.observableArrayList());
@@ -69,33 +70,33 @@ public class MyCloudController implements Initializable {
             cell.textProperty().bind(cell.itemProperty());
             cell.addEventFilter(MouseEvent.MOUSE_PRESSED, event -> {
                 filesCloudList.requestFocus();
-                if (! cell.isEmpty()) {
+                if (!cell.isEmpty()) {
                     int index = cell.getIndex();
                     selectionModel.select(index);
                     selectedFileOnCloud = cell.getItem();
-                    if (event.getClickCount()==2){
+                    if (event.getClickCount() == 2) {
                         try {
                             changeDirOnCloud(selectedFileOnCloud);
-                            selectedFileOnCloud=null;
+                            selectedFileOnCloud = null;
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
                     }
 
-                    if(event.getButton()== MouseButton.SECONDARY){
+                    if (event.getButton() == MouseButton.SECONDARY) {
                         showSelectAction(selectedFileOnCloud, "myCloud");
                     }
                     event.consume();
                 }
             });
 
-            return cell ;
+            return cell;
         });
 
     }
 
     private void changeDirOnCloud(String selectedFileOnCloud) throws IOException {
-        network.sendCommand("/cd "+selectedFileOnCloud, this);
+        network.sendCommand("/cd " + selectedFileOnCloud, this);
     }
 
     private void showSelectAction(String name, String place) {
@@ -111,32 +112,27 @@ public class MyCloudController implements Initializable {
         if (place.equals("myFiles")) {
             if (option.get() == exit) {
                 selectAction.close();
-            }
-            else if (option.get() == delete) {
+            } else if (option.get() == delete) {
                 deleteFile(name);
+            } else if (option.get() == move) {
+                move(selectedFile);
             }
-        else if (option.get()==move){
-                      move(selectedFile);
         }
-        }
-       if(place.equals("myCloud")){
+        if (place.equals("myCloud")) {
             if (option.get() == exit) {
                 selectAction.close();
-            }
-            else if (option.get() == delete) {
-                network.sendCommand("/del "+ name,this);
-            }
-            else if (option.get()==move){
+            } else if (option.get() == delete) {
+                network.sendCommand("/del " + name, this);
+            } else if (option.get() == move) {
                 TextInputDialog textInputDialog = new TextInputDialog("");
                 textInputDialog.setHeaderText("Укажите директорию, в которую вы хотите переместить выбранный файл.");
                 textInputDialog.showAndWait();
                 String nameDir = textInputDialog.getResult();
-                if (nameDir==null){
+                if (nameDir == null) {
                     return;
-                }
-                else{
+                } else {
                     String fileOldPlaceName = selectedFileOnCloud.split(" ")[0];
-                    network.sendCommand("/move "+ fileOldPlaceName+ " "+ nameDir, this);
+                    network.sendCommand("/move " + fileOldPlaceName + " " + nameDir, this);
                 }
             }
         }
@@ -147,23 +143,20 @@ public class MyCloudController implements Initializable {
         textInputDialog.setHeaderText("Укажите директорию, в которую вы хотите переместить выбранный файл.");
         textInputDialog.showAndWait();
         String nameDir = textInputDialog.getResult();
-        if (nameDir==null){
+        if (nameDir == null) {
             return;
-        }
-        else {
-            nameDir.replaceAll("/", File.separator);
-            nameDir.replaceAll("\"", File.separator);
-            File changedDir = new File(nameDir);
+        } else {
+            File changedDir = new File(nameDir.replaceAll("/", File.separator));
             if (changedDir.isDirectory() && changedDir.exists()) {
                 File newPlaceFile = new File(nameDir + File.separator + selectedFile.split(" ")[0]);
-                if (newPlaceFile.exists()&&newPlaceFile.isFile()){
-                    showError("Операция не может быть выполнена!","Файл с таким именем уже есть в выбранной директории!");
-                     return;
+                if (newPlaceFile.exists() && newPlaceFile.isFile()) {
+                    showError("Операция не может быть выполнена!", "Файл с таким именем уже есть в выбранной директории!");
+                    return;
                 }
                 File oldFile = new File(network.getClientDir() + File.separator + selectedFile.split(" ")[0]);
                 if (oldFile.isFile()) {
-                    try{
-                        MoveFile moveFile = new MoveFile(oldFile,newPlaceFile);
+                    try {
+                        MoveFile moveFile = new MoveFile(oldFile, newPlaceFile);
                         moveFile.execute();
                     } catch (IOException e) {
                         e.printStackTrace();
@@ -172,60 +165,57 @@ public class MyCloudController implements Initializable {
                     showText("Команда выполнена!", "Файл успешно перемещен в новую директорию!");
                 } else if (oldFile.isDirectory()) {
 
-                    File newDir= new File(nameDir + File.separator + selectedFile.split(" ")[0]);
+                    File newDir = new File(nameDir + File.separator + selectedFile.split(" ")[0]);
                     newDir.mkdir();
                     MoveDirectory moveDirectory = new MoveDirectory(oldFile, newDir);
                     String result = moveDirectory.execute();
-                    if (result==null) {
+                    if (result == null) {
                         showText("Команда выполнена!", "Выбранная папка с файлами успешно перемещена в новую директорию!");
-                    }
-                    else {
+                    } else {
                         showError("Операция не может быть выполнена!", result);
                     }
                 }
-            }
-            else {
+            } else {
                 showError("Команда не выполнена!", "Не верно указан путь.");
             }
         }
-
+        network.sendCommand("/ls", this);
     }
 
 
     private void deleteFile(String selectedFile) {
-        File fileToDelete = new File(network.getClientDir()+File.separator+selectedFile.split(" ")[0]);
-        if (fileToDelete.exists()&&!fileToDelete.isDirectory())
-        {
+        File fileToDelete = new File(network.getClientDir() + File.separator + selectedFile.split(" ")[0]);
+        if (fileToDelete.exists() && !fileToDelete.isDirectory()) {
             fileToDelete.delete();
-        }
-        else if(fileToDelete.isDirectory()){
+        } else if (fileToDelete.isDirectory()) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setHeaderText("Вы выбрали директорию.");
             alert.setContentText("Вы уверены, что хотите удалить директорию вмете со всеми файлами?");
             ButtonType delete = new ButtonType("Delete");
             ButtonType exit = new ButtonType("Cancel");
             alert.getButtonTypes().clear();
-            alert.getButtonTypes().addAll(delete,exit);
+            alert.getButtonTypes().addAll(delete, exit);
             Optional<ButtonType> option = alert.showAndWait();
-            if (option.get()==exit){
+            if (option.get() == exit) {
                 alert.close();
-            }
-            else if (option.get()==delete){
+            } else if (option.get() == delete) {
                 deleteDirectory(fileToDelete);
             }
         }
+        network.sendCommand("/ls", this);
     }
 
     private void deleteDirectory(File file) {
-            File[] contents = file.listFiles();
-            if (contents != null) {
-                for (File f : contents) {
-                    if (! Files.isSymbolicLink(f.toPath())) {
-                        deleteDirectory(f);
-                    }
+        File[] contents = file.listFiles();
+        if (contents != null) {
+            for (File f : contents) {
+                if (!Files.isSymbolicLink(f.toPath())) {
+                    deleteDirectory(f);
                 }
             }
-            file.delete();
+        }
+        file.delete();
+        network.sendCommand("/ls", this);
     }
 
     private void changeDir(String selectedFile) {
@@ -234,35 +224,34 @@ public class MyCloudController implements Initializable {
             if (network.getClientDir().equals(clientParent)) {
                 return;
             }
-                File parent = new File(file.getParent());
-                 if (parent.exists()) {
-                    network.setClientDirDirect(parent.getPath());
-                }
+            File parent = new File(file.getParent());
+            if (parent.exists()) {
+                network.setClientDirDirect(parent.getPath());
             }
-        else {
+        } else {
             String dirName = selectedFile.replace(" [DIR]", "").trim();
-            File newFile = new File(network.getClientDir()+File.separator+ dirName);
+            File newFile = new File(network.getClientDir() + File.separator + dirName);
             if (newFile.exists() && newFile.isDirectory()) {
                 network.setClientDir(dirName);
             }
         }
-            clientPath.setText(network.getClientDir());
-            ArrayList<String> files = network.createListFiles();
-            showFilesOnClient(files);
-        }
+        clientPath.setText(network.getClientDir());
+        ArrayList<String> files = network.createListFiles();
+        showFilesOnClient(files);
+    }
 
 
-    public void showText(String type,String text){
+    public void showText(String type, String text) {
         Platform.runLater(() -> {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Успех!");
-        alert.setHeaderText(type);
-        alert.setContentText(text);
-        alert.showAndWait();
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("Успех!");
+            alert.setHeaderText(type);
+            alert.setContentText(text);
+            alert.showAndWait();
         });
     }
 
-    public void showError(String type,String text){
+    public void showError(String type, String text) {
         Platform.runLater(() -> {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Ошибка!");
@@ -272,13 +261,14 @@ public class MyCloudController implements Initializable {
         });
     }
 
-    public  void showFilesOnClient (List<String> files) {
+    public void showFilesOnClient(List<String> files) {
         Platform.runLater(() -> {
             filesClientList.getItems().clear();
             filesClientList.setItems(FXCollections.observableArrayList(files));
         });
     }
-    public  void showFilesOnCloud (List<String> files) {
+
+    public void showFilesOnCloud(List<String> files) {
         Platform.runLater(() -> {
             serverPath.setText(network.getServerDir());
             filesCloudList.getItems().clear();
@@ -288,52 +278,58 @@ public class MyCloudController implements Initializable {
 
 
     public void sendCommand(ActionEvent mouseEvent) throws IOException {
-        if (selectedFile==null){
+        if (selectedFile == null) {
             showError("Команда не может быть выполнена!", "Выберите файл из списка (Мои файлы) и выделите его, щелкнув мышью.");
             return;
         }
         String fileName = selectedFile.split(" ")[0];
 
-        network.sendCommand("/send "+fileName, this);
+        network.sendCommand("/send " + fileName, this);
     }
 
     public void getCommand(ActionEvent actionEvent) throws IOException {
-        if (selectedFileOnCloud==null){
+        if (selectedFileOnCloud == null) {
             showError("Команда не может быть выполнена!", "Выберите файл из списка (Мое облако) и выделите его, щелкнув мышью.");
             return;
         }
         String fileName = selectedFileOnCloud.split(" ")[0];
-        network.sendCommand("/get "+ fileName, this);
+        network.sendCommand("/get " + fileName, this);
     }
 
     public void updateCommand(ActionEvent actionEvent) {
-        network.sendCommand("/ls",this);
+        network.sendCommand("/ls", this);
     }
 
     public void changeStyleOnMouseEnterBtnGet(MouseEvent mouseEvent) {
-       setActiveButtonStyle(getBtn);
+        setActiveButtonStyle(getBtn);
     }
+
     public void changeStyleOnMouseExitBtnGet(MouseEvent mouseEvent) {
         getBtn.setEffect(null);
     }
+
     public void changeStyleOnMouseEnterBtnSend(MouseEvent mouseEvent) {
-       setActiveButtonStyle(sendBtn);
+        setActiveButtonStyle(sendBtn);
     }
+
     public void changeStyleOnMouseExitBtnSend(MouseEvent mouseEvent) {
         sendBtn.setEffect(null);
     }
+
     public void changeStyleOnMouseEnterBtnUpdate(MouseEvent mouseEvent) {
-       setActiveButtonStyle(updateBtn);
+        setActiveButtonStyle(updateBtn);
     }
+
     public void changeStyleOnMouseExitBtnUpdate(MouseEvent mouseEvent) {
         updateBtn.setEffect(null);
     }
-    public void setActiveButtonStyle(ImageView imageView){
+
+    public void setActiveButtonStyle(ImageView imageView) {
         Glow glow = new Glow();
         glow.setLevel(0.9);
         imageView.setEffect(glow);
-        Lighting lighting= new Lighting();
-       imageView.setEffect(lighting);
+        Lighting lighting = new Lighting();
+        imageView.setEffect(lighting);
     }
 
     public void setNetwork(Network network) {
@@ -344,7 +340,7 @@ public class MyCloudController implements Initializable {
         TextInputDialog textInputDialog = new TextInputDialog("");
         textInputDialog.setHeaderText("Введите имя директории.");
         textInputDialog.showAndWait();
-        if (textInputDialog.getResult()!=null){
+        if (textInputDialog.getResult() != null) {
             String nameDir = textInputDialog.getResult();
             if (!nameDir.trim().equals("")) {
                 File file = new File(network.getClientDir() + File.separator + nameDir);
@@ -354,12 +350,11 @@ public class MyCloudController implements Initializable {
                     file.mkdir();
                     showText("Команда выполнена!", "Директория " + nameDir + " создана.");
                 }
-            }
-            else
-            {
+            } else {
                 showError("Невозможно выполнить операцию!", "Не указано имя новой директории!");
             }
         }
+        network.sendCommand("/ls", this);
 
     }
 
@@ -375,6 +370,7 @@ public class MyCloudController implements Initializable {
                 showError("Невозможно выполнить операцию!", "Не указано имя новой директории!");
             }
         }
+        network.sendCommand("/ls", this);
     }
 
     public void changeStyleOnMouseEnterBtnAddClient(MouseEvent mouseEvent) {
@@ -394,17 +390,17 @@ public class MyCloudController implements Initializable {
     }
 
     public void showHelp(ActionEvent actionEvent) throws FileNotFoundException {
-       Alert info = new Alert(Alert.AlertType.INFORMATION);
-       info.setHeaderText("О программе.");
+        Alert info = new Alert(Alert.AlertType.INFORMATION);
+        info.setHeaderText("О программе.");
         info.setResizable(true);
         info.getDialogPane().setMinWidth(1000);
-       Scanner scanner = new Scanner(new File("about.txt"));
-       StringBuilder sb = new StringBuilder();
-       while(scanner.hasNext()){
-           sb.append(scanner.next()).append(" ");
-       }
-       info.setContentText(sb.toString());
-       scanner.close();
+        Scanner scanner = new Scanner(new File("about.txt"));
+        StringBuilder sb = new StringBuilder();
+        while (scanner.hasNext()) {
+            sb.append(scanner.next()).append(" ");
+        }
+        info.setContentText(sb.toString());
+        scanner.close();
         info.show();
     }
 }
