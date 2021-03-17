@@ -274,7 +274,7 @@ public class MyFileHandler extends SimpleChannelInboundHandler<Command> {
 
             case END:{
           Command commandEndToClient = new Command().closeConnection();
-          NettyServer.logger.log(Level.INFO,"Получена неизвестная команда END");
+          NettyServer.logger.log(Level.INFO,"Получена команда END");
           ctx.writeAndFlush(commandEndToClient);
           ctx.close();
           break;

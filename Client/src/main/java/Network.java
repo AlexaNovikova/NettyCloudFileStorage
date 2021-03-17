@@ -19,6 +19,7 @@ public class Network {
     private static byte[] buffer;
     private static String clientNick;
     public boolean authOk;
+    public boolean regOK;
     private String serverDir;
 
 
@@ -37,6 +38,7 @@ public class Network {
             is = new ObjectDecoderInputStream(socket.getInputStream());
             buffer = new byte[BUFFER_SIZE];
             authOk = false;
+            regOK=false;
             return true;
         } catch (IOException e) {
             System.out.println("Соединение не было установлено!");
@@ -59,6 +61,11 @@ public class Network {
                             System.out.println("Авторизация прошла");
                             authOk = true;
                             cloudController.showText(result, login + ", вы успешно вошли в облачное хранилище.");
+                            break;
+                        }
+
+                        case REG_OK:{
+                            regOK=true;
                             break;
                         }
 
@@ -162,6 +169,14 @@ public class Network {
                         commandFromClient = new Command().authCommand(login, password);
                         os.writeObject(commandFromClient);
                     }
+                    break;
+                }
+
+                case "/reg": {
+                        String login = data.split(" ", 2)[0];
+                        String password = data.split(" ", 2)[1];
+                        commandFromClient = new Command().regCommand(login, password);
+                        os.writeObject(commandFromClient);
                     break;
                 }
                 case "/ls": {

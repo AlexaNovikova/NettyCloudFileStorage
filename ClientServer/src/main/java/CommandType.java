@@ -1,6 +1,8 @@
 
 public enum CommandType {
     AUTH,
+    REG,
+    REG_OK,
     AUTH_OK,
     CD,
     LS,

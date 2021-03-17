@@ -403,4 +403,9 @@ public class MyCloudController implements Initializable {
         scanner.close();
         info.show();
     }
+
+    public void exit(ActionEvent actionEvent) {
+        network.sendCommand("/end ",this);
+        System.exit(0);
+    }
 }

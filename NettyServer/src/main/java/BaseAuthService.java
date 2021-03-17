@@ -6,7 +6,6 @@ public class BaseAuthService {
     private Connection connection;
     private  PreparedStatement regPrepStm;
     private PreparedStatement authPrepStm;
-    private PreparedStatement changeNickStm;
 
 
     public BaseAuthService(){
@@ -29,30 +28,31 @@ public class BaseAuthService {
         }
     }
 
-//public Integer registration (String login, String password) {
-//    try {
-//        connect();
-//       // statement = connection.createStatement();
-//        regStatement();
-//        regPrepStm.setString(1, nick);
-//        regPrepStm.setString(2,login);
-//        regPrepStm.setString(3,password);
-//        int rez = regPrepStm.executeUpdate();
-//        regPrepStm.close();;
-//        return rez;
-//    } catch (SQLException|ClassNotFoundException e) {
-//        e.printStackTrace();
-//    }
-//    finally {
-//        disconnect();
-//    }
-//    return -1;
-//
-//}
+public Integer registration (String login, String password) {
+    try {
+        regStatement();
+        regPrepStm.setString(1,login);
+        regPrepStm.setString(2,password);
+        try{
+            int rez = regPrepStm.executeUpdate();
+            regPrepStm.close();
+            return rez;
+        }
+        catch (SQLException e){
+         NettyServer.logger.log(Level.INFO, "Не уникальные лошин/пароль!");
+         return -1;
+        }
+
+    } catch (SQLException e) {
+        e.printStackTrace();
+    }
+
+    return -1;
+}
 
 
 public void regStatement () throws SQLException {
-       regPrepStm = connection.prepareStatement("INSERT INTO users (nick,login,password) VALUES (?,?,?);");
+       regPrepStm = connection.prepareStatement("INSERT INTO users (login,password) VALUES (?,?);");
 }
 public void authStatement () throws SQLException {
         authPrepStm = connection.prepareStatement("SELECT * FROM users WHERE login= ? AND password= ?;");

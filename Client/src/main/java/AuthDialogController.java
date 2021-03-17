@@ -43,8 +43,26 @@ public class AuthDialogController implements Initializable {
 
         }
         @FXML
-        private void registerOpen(){
+        private void register(){
+            String login = loginField.getText();
+            String password = passField.getText();
+            if (login.isEmpty()|| password.isEmpty()) {
+                cloudApp.showErrorMessage("Поля не должны быть пустыми", "Ошибка ввода");
+                return;
+            }
 
+            String regMessage ="/reg "+login+ " "+ password;
+            network.sendCommand(regMessage,cloudApp.getMyCloudController());
+
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+            if(network.regOK){
+                cloudApp.showMessage("Вы успешно прошли регистрацию!");
+            }
         }
 
         public void setNetwork(Network network) {
