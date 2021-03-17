@@ -16,6 +16,13 @@ public class Command implements Serializable {
         return command;
     }
 
+    public Command regCommand (String login, String password) {
+        Command command = new Command();
+        command.type=CommandType.REG;
+        command.data= new RegCommandData(login, password);
+        return command;
+    }
+
     public Command listFilesCommand(){
         Command command = new Command();
         command.type=CommandType.LS;
@@ -41,7 +48,12 @@ public class Command implements Serializable {
         command.data = new CommandResultOK("Авторизация прошла успешно!", login);
         return command;
     }
-
+    public Command successReg (String login){
+        Command command = new Command();
+        command.type = CommandType.REG_OK;
+        command.data = new CommandResultOK("Регистрация прошла усрешно!", login);
+        return command;
+    }
     public Command sendListFiles(ArrayList<String> filesList, String serverDir){
         Command command = new Command();
         command.type=CommandType.LS_OK;

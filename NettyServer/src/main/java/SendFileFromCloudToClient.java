@@ -19,18 +19,12 @@ public class SendFileFromCloudToClient {
     public void createCommandAndSend (ChannelHandlerContext ctx) {
 
         try (InputStream fis = new FileInputStream(fileToSend)) {
-            int ptr = 0;
-            long fileSize= fileToSend.length();
-            while (fileSize > buffer.length) {
-                ptr = fis.read(buffer);
+            int ptr;
+            while ((ptr=fis.read(buffer))>=0) {
                 Command fileToClient = new Command().file(buffer, ptr);
-                fileSize -= ptr;
                 ctx.writeAndFlush(fileToClient);
-            }
-            byte[] bufferLast = new byte[Math.toIntExact(fileSize)];
-            ptr = fis.read(bufferLast);
-            Command fileToClient = new Command().file(bufferLast, ptr);
-            ctx.writeAndFlush(fileToClient);
+          }
+
         } catch (IOException e) {
             e.printStackTrace();
         }

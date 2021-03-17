@@ -18,6 +18,7 @@ public class AuthHandler extends SimpleChannelInboundHandler<Command> {
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         NettyServer.logger.log(Level.INFO,"Сервер запущен");
+        authService = server.getAuthService();
     }
 
     @Override
@@ -33,7 +34,7 @@ public class AuthHandler extends SimpleChannelInboundHandler<Command> {
             AuthCommandData authCommand = (AuthCommandData) command.getData();
             String login = authCommand.getLogin();
             String password = authCommand.getPassword();
-            authService = server.getAuthService();
+
             String successAuth = authService.checkAuth(login, password);
             if (successAuth != null) {
                 ctx.pipeline().remove(AuthHandler.class);
@@ -43,6 +44,20 @@ public class AuthHandler extends SimpleChannelInboundHandler<Command> {
             } else {
                 Command errorAuth = new Command().error("Неверно введены логин и пароль!");
                 ctx.writeAndFlush(errorAuth);
+            }
+        }
+        if (command.getType().equals(CommandType.REG)){
+            NettyServer.logger.log(Level.INFO,"Получена команда REG");
+            RegCommandData regCommand = (RegCommandData) command.getData();
+            String login = regCommand.getLogin();
+            String password = regCommand.getPassword();
+           int result = authService.registration(login, password);
+            if (result!=-1) {
+               Command regOK = new Command().successReg(login);
+               ctx.writeAndFlush(regOK);
+            } else {
+                Command errorReg = new Command().error("Пользователь с такими данными уже зарегистрирован!");
+                ctx.writeAndFlush(errorReg);
             }
         }
         if (command.getType().equals(CommandType.END)){

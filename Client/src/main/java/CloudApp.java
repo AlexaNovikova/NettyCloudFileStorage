@@ -90,6 +90,13 @@ public class CloudApp extends Application {
         alert.showAndWait();
     }
 
+    public void showMessage(String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Успех!");
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
     public MyCloudController getMyCloudController() {
         return myCloudController;
     }

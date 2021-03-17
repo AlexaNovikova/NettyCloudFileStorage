@@ -16,18 +16,14 @@ public class MoveFile {
     }
 
     public void execute() throws IOException {
-            int ptr = 0;
-            long fileSize = oldPlaceFile.length();
-            while (fileSize > buffer.length) {
-                ptr = fis.read(buffer);
-                fileSize -= ptr;
-                fos.write(buffer, 0, ptr);
-            }
-            byte[] bufferLast = new byte[Math.toIntExact(fileSize)];
-            ptr = fis.read(bufferLast);
-            fos.write(bufferLast, 0, ptr);
-            fis.close();
-            fos.close();
+        int ptr;
+
+        while ((ptr = fis.read(buffer)) >= 0) {
+            fos.write(buffer, 0, ptr);
+        }
+
+        fis.close();
+        fos.close();
     }
 
 }
